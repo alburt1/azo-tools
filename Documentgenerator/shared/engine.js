@@ -4602,7 +4602,7 @@ function buildTopnav(activeId){
   return `
   <div class="topnav">
     <div class="topnav-inner">
-      <a class="brand" href="index.html">
+      <a class="brand" href="https://www.samenaankoopazo.be/" target="_blank" rel="noopener">
         <img src="${LOGO_TOPNAV}" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
       </a>
       <nav class="topnav-center">
