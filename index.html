@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZO — Tools</title>
+<link rel="stylesheet" href="shared/style.css">
+<style>
+  /* Pagina-eigen aanvullingen — bewust terughoudend, in lijn met de rest van de app.
+     Geen gradient-banner: gewoon de bestaande AZO-tint, een scherpe logo-weergave,
+     en een dunne groene onderstreping als enige accent. */
+
+  .hero-band{
+    background:var(--azo-green-tint);
+    border-bottom:1px solid var(--azo-green-tint-2);
+  }
+  .hero-inner{
+    max-width:1160px; margin:0 auto; padding:52px 28px 44px; text-align:center;
+  }
+  .hero-inner .logo-big{ height:64px; width:auto; margin:0 auto 22px; }
+  .hero-rule{
+    width:46px; height:3px; background:var(--azo-green); border-radius:2px; margin:0 auto 18px;
+  }
+  .hero-inner h1{
+    font-size:30px; margin:0 0 12px; letter-spacing:-.01em; color:var(--azo-green-deep);
+    font-weight:800;
+  }
+  .hero-inner p{
+    color:var(--ink-soft); font-size:14.5px; max-width:520px; margin:0 auto; line-height:1.65;
+  }
+
+  .hub-grid{ max-width:1160px; margin:0 auto; padding:40px 28px 60px; }
+  .hub-group-label{
+    font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-faint); display:flex; align-items:center; gap:10px; margin-bottom:20px;
+  }
+  .hub-group-label::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .hub-group-count{
+    background:var(--azo-green-tint); color:var(--azo-green-dark); font-weight:800;
+    border-radius:10px; padding:1px 8px; font-size:11px;
+  }
+
+  /* Tool-tegels — bewust anders dan de documentenlijst-kaartjes binnen de
+     Documentgenerator: grote, kleurrijke portaal-tegels met een eigen
+     illustratieve kop, in plaats van kleine rijkaartjes met tekst-icoontje. */
+  .tool-tiles{ display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+  @media (max-width:760px){ .tool-tiles{ grid-template-columns:1fr; } }
+
+  .tool-tile{
+    position:relative; overflow:hidden; border-radius:20px; background:#fff;
+    border:1px solid var(--line); box-shadow:var(--shadow-card);
+    text-decoration:none; color:var(--ink); display:flex; flex-direction:column;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s ease;
+  }
+  .tool-tile:hover{ transform:translateY(-5px); box-shadow:0 24px 46px -14px rgba(30,50,15,.32); }
+
+  .tile-top{ position:relative; padding:30px 26px 54px; overflow:hidden; }
+  .tile-blue .tile-top{ background:linear-gradient(135deg,#1c3a4d 0%,var(--sel-blue) 100%); }
+  .tile-green .tile-top{ background:linear-gradient(135deg,var(--azo-green-deep) 0%,var(--azo-green) 100%); }
+
+  .tile-watermark{
+    position:absolute; right:-32px; bottom:-38px; width:170px; height:170px; opacity:.16;
+    pointer-events:none;
+  }
+  .tile-watermark svg{ width:100%; height:100%; }
+
+  .tile-icon{
+    position:relative; z-index:1; width:52px; height:52px; border-radius:14px;
+    background:rgba(255,255,255,.16); backdrop-filter:blur(2px);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tile-icon svg{ width:26px; height:26px; }
+
+  .tile-body{ padding:24px 26px 28px; flex:1; display:flex; flex-direction:column; }
+  .tile-eyebrow{ font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; margin-bottom:9px; }
+  .tile-blue .tile-eyebrow{ color:var(--sel-blue); }
+  .tile-green .tile-eyebrow{ color:var(--gun-green); }
+  .tile-title{ font-size:21px; font-weight:800; margin-bottom:10px; letter-spacing:-.01em; line-height:1.2; }
+  .tile-desc{ font-size:13.5px; color:var(--ink-soft); line-height:1.65; flex:1; }
+
+  .tile-cta{
+    margin-top:22px; display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:800;
+    padding:11px 18px; border-radius:24px; width:fit-content; transition:gap .2s ease;
+  }
+  .tile-blue .tile-cta{ background:var(--sel-blue-bg); color:var(--sel-blue); }
+  .tile-green .tile-cta{ background:var(--gun-green-bg); color:var(--gun-green); }
+  .tool-tile:hover .tile-cta{ gap:11px; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <a class="brand" href="index.html">
+      <img src="assets/azo_topnav.png" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
+    </a>
+    <nav class="topnav-center">
+      <a class="topnav-home" href="Documentgenerator/index.html">Documentgenerator</a>
+      <a class="topnav-home" href="Ledenlijst-samenvoeger/index.html">Ledenlijst Samenvoeger</a>
+    </nav>
+    <span></span>
+  </div>
+</div>
+
+<div class="hero-band">
+  <div class="hero-inner">
+    <img class="logo-big" src="assets/azo_full.png" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
+    <div class="hero-rule"></div>
+    <h1>Tools</h1>
+    <p>Eén plek voor de interne tools rond aanbestedingen: documenten genereren, ledenlijsten
+    samenvoegen, en wat er verder nog bijkomt.</p>
+  </div>
+</div>
+
+<div class="hub-grid">
+  <div class="hub-group">
+    <div class="hub-group-label">Beschikbare tools <span class="hub-group-count">2</span></div>
+    <div class="tool-tiles">
+
+      <a class="tool-tile tile-blue" href="Documentgenerator/index.html">
+        <div class="tile-top">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 2.5h9l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4.5 20V4A1.5 1.5 0 0 1 6 2.5Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M14.5 2.5V7a1 1 0 0 0 1 1h4.5" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M8 12.5h8M8 15.5h8M8 18.5h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="tile-watermark">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 85 L38 30 L52 52 L64 32 L92 85 Z" fill="#fff"/>
+            </svg>
+          </div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-eyebrow">Aanbestedingen</div>
+          <div class="tile-title">Documentgenerator</div>
+          <div class="tile-desc">Vul projectgegevens één keer in en download correct opgemaakte brieven,
+          bestekken en verslagen — in de vaste AZO-huisstijl.</div>
+          <div class="tile-cta">Tool openen <span>→</span></div>
+        </div>
+      </a>
+
+      <a class="tool-tile tile-green" href="Ledenlijst-samenvoeger/index.html">
+        <div class="tile-top">
+          <div class="tile-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9" cy="12" r="6.5" stroke="#fff" stroke-width="1.6"/>
+              <circle cx="15" cy="12" r="6.5" stroke="#fff" stroke-width="1.6"/>
+            </svg>
+          </div>
+          <div class="tile-watermark">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 85 L38 30 L52 52 L64 32 L92 85 Z" fill="#fff"/>
+            </svg>
+          </div>
+        </div>
+        <div class="tile-body">
+          <div class="tile-eyebrow">Ledenlijsten</div>
+          <div class="tile-title">Ledenlijst Samenvoeger</div>
+          <div class="tile-desc">Leg de AZO-ledenlijst naast de koepellijst en voeg ze samen tot één lijst
+          zonder dubbels — fuzzy matching op naam, met gemeente als extra check.</div>
+          <div class="tile-cta">Tool openen <span>→</span></div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

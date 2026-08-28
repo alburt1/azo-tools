@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZO — Niet-gunning</title>
+<link rel="stylesheet" href="shared/style.css">
+</head>
+<body>
+
+<div id="topnav-mount"></div>
+<div class="breadcrumb" id="breadcrumb-mount"></div>
+
+<div class="page-head">
+  <div>
+    <h1 id="doc-title">—</h1>
+    <div class="sub" id="doc-sub">—</div>
+  </div>
+  <span class="phase-chip" id="doc-phase">—</span>
+</div>
+
+<div class="workspace">
+  <section class="form-card">
+    <div id="draft-banner" class="draft-banner" hidden></div>
+    <div id="project-banner" class="draft-banner project-banner" hidden></div>
+    <div id="form-fields"></div>
+    <div id="warnings-panel" class="warnings-panel" hidden></div>
+    <div class="completeness">
+      <span id="completeness-label">0% ingevuld</span>
+      <div class="bar"><span id="completeness-bar" style="width:0%"></span></div>
+    </div>
+    <div class="btn-bar">
+      <button class="btn-primary" id="btn-download">⬇  Genereer Word-document</button>
+      <button class="btn-secondary" id="btn-reset">Formulier wissen</button>
+    </div>
+  </section>
+
+  <section class="preview-col">
+    <div class="preview-toolbar">
+      <span>Live voorbeeld — identiek aan het gegenereerde Word-bestand</span>
+      <span class="page-count" id="page-count-label"></span>
+      <span class="zoom">
+        <button class="zoombtn" id="zoom-out">−</button>
+        <span id="zoom-label">100%</span>
+        <button class="zoombtn" id="zoom-in">+</button>
+      </span>
+    </div>
+    <div class="paper-shell">
+      <div id="preview-mount"></div>
+    </div>
+  </section>
+</div>
+
+<script src="shared/docx.iife.js"></script>
+<script src="shared/html-to-docx.js"></script>
+<script src="shared/engine.js"></script>
+<script>initPage('niet_gunning');</script>
+</body>
+</html>
