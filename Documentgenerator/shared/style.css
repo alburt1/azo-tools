@@ -109,6 +109,22 @@ button{font-family:inherit;}
 .topnav-home.active{color:var(--azo-green-deep);font-weight:700;}
 .topnav-home.active::after{transform:scaleX(1);background:var(--azo-green-dark);}
 
+/* Uitlog-knop — een rustige "ghost"-knop naast de Home-knop; wordt bij
+   hover zacht rood-getint als subtiele hint dat het een "verlaat"-actie is. */
+.topnav-signout{
+  position:relative;z-index:1;
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:700; letter-spacing:.01em; color:var(--ink-soft); text-decoration:none;
+  padding:9px 15px; border-radius:20px; border:1px solid var(--line); background:#fff;
+  white-space:nowrap; cursor:pointer;
+  transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+.topnav-signout svg{ width:14px; height:14px; flex:none; }
+.topnav-signout:hover{
+  background:#fdf2ee; border-color:#e6b8a8; color:#a6432a;
+  transform:translateY(-1px);
+}
+
 /* Home-knop rechts in de titelbalk — de vorige pil-knopstijl, bewust behouden
    als duidelijke "terug naar overzicht"-actie naast de gecentreerde tekstlinks. */
 .topnav-cta-home{

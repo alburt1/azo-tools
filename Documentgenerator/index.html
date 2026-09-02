@@ -6,8 +6,21 @@
 <title>AZO — Documentgenerator</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="stylesheet" href="shared/style.css">
+<style>body{visibility:hidden;}</style>
+<script>window.__AZO_PAGE_DEPTH__ = 1;</script>
+<script src="shared/lib/supabase.js"></script>
+<script src="shared/auth.js"></script>
 </head>
 <body>
+<script>
+(async () => {
+  const session = await requireAuth();
+  if (session) {
+    wireAuthUI(session);
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
 
 <div id="topnav-mount"></div>
 
@@ -23,6 +36,9 @@
     <input type="text" id="hub-search-input" placeholder="Zoek een document — bv. “gunning”, “sluiting”, “selectie”…" autocomplete="off">
     <span class="hs-count" id="hub-search-count"></span>
   </div>
+  <p style="text-align:center;margin-top:14px;">
+    <a href="historiek.html" style="font-size:12px;color:var(--ink-faint);text-decoration:underline;">Bekijk documentenhistoriek van het team →</a>
+  </p>
 </div>
 
 <div class="hub-recent" id="hub-recent" hidden>

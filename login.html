@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inloggen — AZO Tools</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="shared/style.css">
+<script src="shared/lib/supabase.js"></script>
+<style>
+  body{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:var(--azo-green-tint);
+  }
+  .login-card{
+    width:100%; max-width:380px; background:#fff; border:1px solid var(--line);
+    border-radius:20px; padding:36px 32px; box-shadow:0 20px 50px -20px rgba(30,50,15,.35);
+  }
+  .login-card .logo{ display:block; height:44px; margin:0 auto 22px; }
+  .login-card h1{
+    font-size:19px; text-align:center; margin:0 0 6px; color:var(--azo-green-deep); font-weight:800;
+  }
+  .login-card p.sub{ text-align:center; font-size:12.5px; color:var(--ink-faint); margin:0 0 26px; }
+  .login-field{ margin-bottom:16px; }
+  .login-field label{ display:block; font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .login-field input{
+    width:100%; box-sizing:border-box; padding:11px 14px; border-radius:10px;
+    border:1.5px solid var(--line); font-size:14px; font-family:var(--sans);
+    transition:border-color .15s ease;
+  }
+  .login-field input:focus{ outline:none; border-color:var(--azo-green); box-shadow:0 0 0 3px rgba(125,183,63,.18); }
+  .login-submit{
+    width:100%; padding:12px; border:none; border-radius:10px; background:var(--azo-green-dark);
+    color:#fff; font-weight:800; font-size:14px; cursor:pointer; margin-top:6px;
+    transition:background .15s ease;
+  }
+  .login-submit:hover{ background:var(--azo-green-deep); }
+  .login-submit:disabled{ background:#b9bdb4; cursor:not-allowed; }
+  .login-error{
+    background:var(--amber-bg); color:#8a5a12; border:1px solid #eccf95; border-radius:8px;
+    padding:10px 12px; font-size:12.5px; margin-bottom:16px; display:none;
+  }
+  .login-foot{ text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:20px; }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <img class="logo" src="assets/azo_full.png" alt="AZO">
+  <h1>AZO Tools</h1>
+  <p class="sub">Log in met je AZO-account om verder te gaan.</p>
+
+  <div class="login-error" id="loginError"></div>
+
+  <form id="loginForm">
+    <div class="login-field">
+      <label for="email">E-mailadres</label>
+      <input type="email" id="email" autocomplete="username" required>
+    </div>
+    <div class="login-field">
+      <label for="password">Wachtwoord</label>
+      <input type="password" id="password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="login-submit" id="loginBtn">Inloggen</button>
+  </form>
+
+  <div class="login-foot">Geen toegang? Vraag een account aan bij de beheerder.</div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://gjsoepafdujpyclicini.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_T-ZrRD4W3vxjofab7RkpUw_gm-ltZYl";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  function getRedirectTarget(){
+    const params = new URLSearchParams(window.location.search);
+    const r = params.get("redirect");
+    if (r && r.startsWith("/")) return "." + r; // veiligheid: enkel relatieve, interne paden toelaten
+    return "index.html";
+  }
+
+  // Als er al een geldige sessie is, meteen doorsturen (geen login-scherm nodig).
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) window.location.replace(getRedirectTarget());
+  })();
+
+  const form = document.getElementById("loginForm");
+  const errorBox = document.getElementById("loginError");
+  const btn = document.getElementById("loginBtn");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorBox.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Bezig met inloggen…";
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      errorBox.textContent = "Inloggen mislukt: onjuist e-mailadres of wachtwoord.";
+      errorBox.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "Inloggen";
+      return;
+    }
+
+    window.location.href = getRedirectTarget();
+  });
+</script>
+</body>
+</html>

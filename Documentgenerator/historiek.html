@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentenhistoriek — AZO Tools</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="stylesheet" href="shared/style.css">
+<style>body{visibility:hidden;}</style>
+<script>window.__AZO_PAGE_DEPTH__ = 1;</script>
+<script src="shared/lib/supabase.js"></script>
+<script src="shared/auth.js"></script>
+</head>
+<body>
+<script>
+(async () => {
+  const session = await requireAuth();
+  if (session) {
+    wireAuthUI(session);
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <a class="brand" href="https://www.samenaankoopazo.be/" target="_blank" rel="noopener">
+      <img src="assets/azo_topnav.png" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
+    </a>
+    <nav class="topnav-center">
+      <a class="topnav-home active" href="index.html">Documentgenerator</a>
+      <a class="topnav-home" href="../Ledenlijst-samenvoeger/index.html">Ledenlijst Samenvoeger</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
+      <span data-user-email style="font-size:11.5px;color:var(--ink-faint);"></span>
+      <a href="#" data-signout-btn class="topnav-signout">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 4.5H8.5A1.5 1.5 0 0 0 7 6v12a1.5 1.5 0 0 0 1.5 1.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M20 12H10.5M20 12l-3-3M20 12l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Uitloggen
+      </a>
+      <a class="topnav-cta-home" href="../index.html">⌂&nbsp; Home</a>
+    </div>
+  </div>
+</div>
+
+<div class="hub-hero" style="padding:44px 24px;">
+  <h1 style="text-align:center;font-size:26px;">Documentenhistoriek</h1>
+  <p style="text-align:center;color:var(--ink-soft);max-width:560px;margin:8px auto 0;">
+    Overzicht van alle documenten die het team via de Documentgenerator gedownload heeft.
+  </p>
+</div>
+
+<div style="max-width:960px;margin:0 auto;padding:36px 28px 80px;">
+  <div id="listWrap">
+    <p style="color:var(--ink-faint);font-size:13px;">Bezig met laden…</p>
+  </div>
+</div>
+
+<script>
+function escHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('nl-BE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+async function loadHistory(){
+  const wrap = document.getElementById('listWrap');
+  const { data, error } = await supabaseClient
+    .from('document_history')
+    .select('*')
+    .order('created_at', {ascending:false})
+    .limit(200);
+
+  if(error){
+    wrap.innerHTML = `<div style="background:#fdf2ee;border:1px solid #e6b8a8;border-radius:var(--radius-sm);padding:16px;color:#a6432a;font-size:13px;">
+      Kon de historiek niet laden: ${escHtml(error.message)}</div>`;
+    return;
+  }
+  if(!data || data.length===0){
+    wrap.innerHTML = `<p style="color:var(--ink-faint);font-size:13px;">Nog geen documenten gelogd. Zodra iemand een document downloadt via de Documentgenerator, verschijnt dat hier.</p>`;
+    return;
+  }
+
+  const rows = data.map(r => `
+    <tr>
+      <td style="white-space:nowrap;color:var(--ink-faint);">${fmtDate(r.created_at)}</td>
+      <td style="font-weight:700;">${escHtml(r.doc_label || r.doc_type)}</td>
+      <td>${escHtml(r.project_ref || '—')}</td>
+      <td>${escHtml(r.opdracht_titel || '—')}</td>
+      <td style="color:var(--ink-soft);">${escHtml(r.user_email)}</td>
+    </tr>`).join('');
+
+  wrap.innerHTML = `
+    <div style="background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-card);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:var(--azo-green-tint);text-align:left;">
+            <th style="padding:12px 14px;">Datum</th>
+            <th style="padding:12px 14px;">Document</th>
+            <th style="padding:12px 14px;">Projectreferentie</th>
+            <th style="padding:12px 14px;">Opdracht</th>
+            <th style="padding:12px 14px;">Door</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="color:var(--ink-faint);font-size:11.5px;margin-top:12px;">${data.length} rijen getoond (max. 200 recentste).</p>
+  `;
+}
+
+(async () => {
+  await requireAuth();
+  loadHistory();
+})();
+</script>
+
+</body>
+</html>

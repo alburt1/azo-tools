@@ -87,8 +87,21 @@
   .tile-green .tile-cta{ background:var(--gun-green-bg); color:var(--gun-green); }
   .tool-tile:hover .tile-cta{ gap:11px; }
 </style>
+<style>body{visibility:hidden;}</style>
+<script>window.__AZO_PAGE_DEPTH__ = 0;</script>
+<script src="shared/lib/supabase.js"></script>
+<script src="shared/auth.js"></script>
 </head>
 <body>
+<script>
+(async () => {
+  const session = await requireAuth();
+  if (session) {
+    wireAuthUI(session);
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
 
 <div class="topnav">
   <div class="topnav-inner">
@@ -99,7 +112,16 @@
       <a class="topnav-home" href="Documentgenerator/index.html">Documentgenerator</a>
       <a class="topnav-home" href="Ledenlijst-samenvoeger/index.html">Ledenlijst Samenvoeger</a>
     </nav>
-    <span></span>
+    <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
+      <span data-user-email style="font-size:11.5px;color:var(--ink-faint);"></span>
+      <a href="#" data-signout-btn class="topnav-signout">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 4.5H8.5A1.5 1.5 0 0 0 7 6v12a1.5 1.5 0 0 0 1.5 1.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M20 12H10.5M20 12l-3-3M20 12l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Uitloggen
+      </a>
+    </div>
   </div>
 </div>
 

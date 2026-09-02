@@ -6,8 +6,21 @@
 <title>AZO — Niet-gunning</title>
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="stylesheet" href="shared/style.css">
+<style>body{visibility:hidden;}</style>
+<script>window.__AZO_PAGE_DEPTH__ = 1;</script>
+<script src="shared/lib/supabase.js"></script>
+<script src="shared/auth.js"></script>
 </head>
 <body>
+<script>
+(async () => {
+  const session = await requireAuth();
+  if (session) {
+    wireAuthUI(session);
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
 
 <div id="topnav-mount"></div>
 <div class="breadcrumb" id="breadcrumb-mount"></div>

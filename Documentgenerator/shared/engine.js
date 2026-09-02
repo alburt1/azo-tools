@@ -4609,7 +4609,17 @@ function buildTopnav(activeId){
         <a class="topnav-home ${!activeId ? "active":""}" href="index.html">Documentgenerator</a>
         <a class="topnav-home" href="../Ledenlijst-samenvoeger/index.html">Ledenlijst Samenvoeger</a>
       </nav>
-      <a class="topnav-cta-home" href="../index.html">⌂&nbsp; Home</a>
+      <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
+        <span data-user-email style="font-size:11.5px;color:var(--ink-faint);"></span>
+        <a href="#" data-signout-btn class="topnav-signout">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 4.5H8.5A1.5 1.5 0 0 0 7 6v12a1.5 1.5 0 0 0 1.5 1.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M20 12H10.5M20 12l-3-3M20 12l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Uitloggen
+        </a>
+        <a class="topnav-cta-home" href="../index.html">⌂&nbsp; Home</a>
+      </div>
     </div>
   </div>`;
 }
@@ -5305,6 +5315,16 @@ function exportWord(){
       summary: (ENGINE_STATE.data.bedrijfsnaam || ENGINE_STATE.data.opdracht_titel || "").toString().slice(0,60),
       filename: a.download,
       generatedAt: Date.now()
+    });
+
+    // Fase 3 — loggen naar de centrale, gedeelde documentenhistoriek (database).
+    // Faalt dit (geen internet, niet ingelogd, ...), dan gaat de download zelf
+    // gewoon door — dit mag nooit de eigenlijke functionaliteit blokkeren.
+    logDocumentToHistory({
+      docType: ENGINE_STATE.docId,
+      docLabel: doc.title,
+      projectRef: ENGINE_STATE.data.project_ref || "",
+      opdrachtTitel: ENGINE_STATE.data.opdracht_titel || ENGINE_STATE.data.opdracht_titel_klein || "",
     });
 
     // Projectgegevens bijwerken: op de selectiefase leggen we bedrijfsnaam/adres van elke

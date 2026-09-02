@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bewaarde samenvoegingen — AZO Tools</title>
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="stylesheet" href="../shared/style.css">
+<style>body{visibility:hidden;}</style>
+<script>window.__AZO_PAGE_DEPTH__ = 1;</script>
+<script src="../shared/lib/supabase.js"></script>
+<script src="../shared/auth.js"></script>
+<script src="lib/exceljs.min.js"></script>
+</head>
+<body>
+<script>
+(async () => {
+  const session = await requireAuth();
+  if (session) {
+    wireAuthUI(session);
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <a class="brand" href="https://www.samenaankoopazo.be/" target="_blank" rel="noopener">
+      <img src="../assets/azo_topnav.png" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
+    </a>
+    <nav class="topnav-center">
+      <a class="topnav-home" href="../Documentgenerator/index.html">Documentgenerator</a>
+      <a class="topnav-home active" href="index.html">Ledenlijst Samenvoeger</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
+      <span data-user-email style="font-size:11.5px;color:var(--ink-faint);"></span>
+      <a href="#" data-signout-btn class="topnav-signout">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 4.5H8.5A1.5 1.5 0 0 0 7 6v12a1.5 1.5 0 0 0 1.5 1.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M20 12H10.5M20 12l-3-3M20 12l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Uitloggen
+      </a>
+      <a class="topnav-cta-home" href="../index.html">⌂&nbsp; Home</a>
+    </div>
+  </div>
+</div>
+
+<div class="hub-hero" style="padding:44px 24px;">
+  <h1 style="text-align:center;font-size:26px;">Bewaarde samenvoegingen</h1>
+  <p style="text-align:center;color:var(--ink-soft);max-width:560px;margin:8px auto 0;">
+    Elke keer iemand een samengevoegde lijst downloadt, wordt die hier bewaard — herbekijk of download ze opnieuw.
+  </p>
+</div>
+
+<div style="max-width:960px;margin:0 auto;padding:36px 28px 80px;">
+  <div id="listWrap">
+    <p style="color:var(--ink-faint);font-size:13px;">Bezig met laden…</p>
+  </div>
+</div>
+
+<script>
+function escHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('nl-BE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+// Zelfde opmaak-functie als in de tool zelf: groene kop, dikke buitenrand,
+// Bron-kolom in blauw/groen naargelang de herkomst.
+async function downloadRow(row){
+  const GREEN = 'FF4C7527', GREEN_DARK = 'FF31491A', INK = 'FF20241F';
+  const BLUE = 'FF3A6A8A', BLUE_BG = 'FFE8F0F4', GREEN_TXT = 'FF4C7527', GREEN_BG = 'FFE9F2E0', LIGHT_STRIPE = 'FFEAF1E3';
+  const thin = {style:'thin', color:{argb:'FFB9C2AC'}};
+  const medium = {style:'medium', color:{argb:GREEN_DARK}};
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Samengevoegde lijst');
+  ws.columns = [{header:'Naam', key:'naam', width:60},{header:'Gemeente', key:'gemeente', width:28},{header:'Bron', key:'bron', width:22}];
+
+  const headerRow = ws.getRow(1);
+  headerRow.height = 22;
+  headerRow.eachCell(cell=>{
+    cell.font = {name:'Arial', bold:true, size:11, color:{argb:'FFFFFFFF'}};
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:GREEN}};
+    cell.alignment = {vertical:'middle', horizontal: cell.col===1 ? 'left' : 'center'};
+    cell.border = {top:medium, bottom:medium, left:medium, right:medium};
+  });
+
+  const data = row.result_data || [];
+  data.forEach((x, i)=>{
+    const isKoepel = x.src === 'A';
+    const bronText = isKoepel ? 'Koepellijst' : 'AZO-lijst';
+    const bronColor = isKoepel ? BLUE : GREEN_TXT;
+    const bronFill = isKoepel ? BLUE_BG : GREEN_BG;
+    const isEven = (i % 2 === 1);
+    const dRow = ws.addRow({naam:x.name, gemeente:x.city||'', bron: bronText});
+    dRow.eachCell((cell, colNumber)=>{
+      const isBronCol = colNumber===3;
+      cell.font = {name:'Arial', size:10, color:{argb: isBronCol ? bronColor : INK}, bold: isBronCol};
+      cell.alignment = {vertical:'middle', horizontal: colNumber===1 ? 'left' : 'center'};
+      cell.border = {top:thin, bottom:thin, left:thin, right:thin};
+      if(isBronCol){ cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb: bronFill}}; }
+      else if(isEven){ cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb: LIGHT_STRIPE}}; }
+    });
+  });
+  ws.views = [{state:'frozen', ySplit:1, showGridLines:false}];
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date(row.created_at).toISOString().slice(0,10);
+  a.href = url;
+  a.download = `Samengevoegde_ledenlijst_${dateStr}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function loadHistory(){
+  const wrap = document.getElementById('listWrap');
+  const { data, error } = await supabaseClient
+    .from('merged_lists')
+    .select('id,user_email,azo_filename,total_count,unique_added_count,auto_merged_count,reviewed_count,threshold,created_at,result_data')
+    .order('created_at', {ascending:false})
+    .limit(100);
+
+  if(error){
+    wrap.innerHTML = `<div style="background:#fdf2ee;border:1px solid #e6b8a8;border-radius:var(--radius-sm);padding:16px;color:#a6432a;font-size:13px;">
+      Kon de historiek niet laden: ${escHtml(error.message)}</div>`;
+    return;
+  }
+  if(!data || data.length===0){
+    wrap.innerHTML = `<p style="color:var(--ink-faint);font-size:13px;">Nog geen samenvoegingen bewaard. Zodra iemand een samengevoegde lijst downloadt, verschijnt die hier.</p>`;
+    return;
+  }
+
+  wrap.innerHTML = data.map((r, idx) => `
+    <div style="background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-card);padding:18px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div>
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${escHtml(r.azo_filename || 'Ledenlijst')}</div>
+        <div style="font-size:12px;color:var(--ink-faint);">
+          ${fmtDate(r.created_at)} — door ${escHtml(r.user_email)}<br>
+          ${r.total_count ?? '?'} totaal · ${r.unique_added_count ?? '?'} nieuw toegevoegd · ${r.auto_merged_count ?? '?'} dubbels · ${r.reviewed_count ?? '?'} twijfelgevallen
+          ${r.threshold ? ` · drempel ${r.threshold}%` : ''}
+        </div>
+      </div>
+      <button data-idx="${idx}" class="btn-download-row" style="flex:none;background:var(--azo-green-dark);color:#fff;border:none;padding:10px 16px;border-radius:20px;font-weight:700;font-size:12.5px;cursor:pointer;">
+        ⬇ Download
+      </button>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.btn-download-row').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const idx = parseInt(btn.dataset.idx);
+      btn.textContent = 'Bezig…';
+      btn.disabled = true;
+      await downloadRow(data[idx]);
+      btn.textContent = '⬇ Download';
+      btn.disabled = false;
+    });
+  });
+}
+
+(async () => {
+  await requireAuth();
+  loadHistory();
+})();
+</script>
+
+</body>
+</html>
