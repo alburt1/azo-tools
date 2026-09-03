@@ -575,6 +575,19 @@ function finalizeAndRender(listB, usedB){
     }
   });
 
+  // Dubbels BINNEN het geüploade AZO-bestand zelf verwijderen (bv. dezelfde
+  // organisatie die per ongeluk twee keer in het originele bestand stond) —
+  // dit is los van de vergelijking met de Koepellijst.
+  const seenAzoKeys = new Set();
+  const dedupedB_extra = [];
+  finalB_extra.forEach(x=>{
+    const key = (x.name||'').trim().toLowerCase() + '|' + (x.city||'').trim().toLowerCase();
+    if(seenAzoKeys.has(key)) return;
+    seenAzoKeys.add(key);
+    dedupedB_extra.push(x);
+  });
+  const azoInternalDupCount = finalB_extra.length - dedupedB_extra.length;
+
   // Elke Koepellijst-rij die effectief een match kreeg (automatisch of via
   // bevestigd twijfelgeval) wordt gemarkeerd als "BOTH" — zo gaat de info
   // dat een organisatie in béíde lijsten stond niet verloren in het eindresultaat.
@@ -582,12 +595,17 @@ function finalizeAndRender(listB, usedB){
     if(d.idx !== undefined && mergedFull[d.idx]) mergedFull[d.idx].src = 'BOTH';
   });
 
-  const full = [...mergedFull, ...finalB_extra].sort((x,y)=>x.name.localeCompare(y.name,'nl'));
+  const full = [...mergedFull, ...dedupedB_extra].sort((x,y)=>x.name.localeCompare(y.name,'nl'));
 
   document.getElementById('sumTotal').textContent = full.length;
-  document.getElementById('sumUnique').textContent = finalB_extra.length;
+  document.getElementById('sumUnique').textContent = dedupedB_extra.length;
   document.getElementById('sumDup').textContent = finalDups.length;
   document.getElementById('sumReview').textContent = reviewPairs.length;
+
+  if(azoInternalDupCount > 0){
+    const banner = document.getElementById('statB');
+    banner.innerHTML += `<br><span style="color:#9C6B12;font-weight:700;">Let op: ${azoInternalDupCount} organisatie(s) stonden dubbel binnen je eigen AZO-bestand — automatisch tot 1 rij herleid.</span>`;
+  }
 
   const dupBody = document.getElementById('dupBody');
   dupBody.innerHTML='';
