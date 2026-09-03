@@ -73,6 +73,7 @@ function fmtDate(iso){
 async function downloadRow(row){
   const GREEN = 'FF4C7527', GREEN_DARK = 'FF31491A', INK = 'FF20241F';
   const BLUE = 'FF3A6A8A', BLUE_BG = 'FFE8F0F4', GREEN_TXT = 'FF4C7527', GREEN_BG = 'FFE9F2E0', LIGHT_STRIPE = 'FFEAF1E3';
+  const AMBER_TXT = 'FF9C6B12', AMBER_BG = 'FFFCEFD1';
   const thin = {style:'thin', color:{argb:'FFB9C2AC'}};
   const medium = {style:'medium', color:{argb:GREEN_DARK}};
 
@@ -91,10 +92,10 @@ async function downloadRow(row){
 
   const data = row.result_data || [];
   data.forEach((x, i)=>{
-    const isKoepel = x.src === 'A';
-    const bronText = isKoepel ? 'Koepellijst' : 'AZO-lijst';
-    const bronColor = isKoepel ? BLUE : GREEN_TXT;
-    const bronFill = isKoepel ? BLUE_BG : GREEN_BG;
+    let bronText, bronColor, bronFill;
+    if(x.src === 'BOTH'){ bronText='Koepellijst & AZO-lijst'; bronColor=AMBER_TXT; bronFill=AMBER_BG; }
+    else if(x.src === 'A'){ bronText='Koepellijst'; bronColor=BLUE; bronFill=BLUE_BG; }
+    else { bronText='AZO-lijst'; bronColor=GREEN_TXT; bronFill=GREEN_BG; }
     const isEven = (i % 2 === 1);
     const dRow = ws.addRow({naam:x.name, gemeente:x.city||'', bron: bronText});
     dRow.eachCell((cell, colNumber)=>{
