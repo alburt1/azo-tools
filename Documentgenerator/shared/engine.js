@@ -164,6 +164,7 @@ const PAGES = [
   {id:"sluiting",                 file:"brief-sluiting.html",              group:"Gunningsfase",            phase:"gunning"},
   {id:"verslag_selectie",         file:"verslag-selectie.html",            group:"Verslagen",               phase:"verslag"},
   {id:"verslag_gunning",          file:"verslag-gunning.html",             group:"Verslagen",               phase:"verslag"},
+  {id:"verslag_gunning_openbaar", file:"verslag-gunning-openbaar.html",    group:"Verslagen",               phase:"verslag"},
   {id:"selectieleidraad",         file:"selectieleidraad.html",            group:"Verslagen",               phase:"verslag"},
   {id:"bestek_cascade",           file:"bestek-cascade.html",              group:"Tweede fase",              phase:"tweede"},
   {id:"bestek_cascade_percelen",  file:"bestek-cascade-percelen.html",     group:"Tweede fase",              phase:"tweede"},
@@ -3070,6 +3071,192 @@ return {
           </ol>
           </aside>
 
+        </div>
+        ${docFooter()}
+      `;
+    }
+  },
+
+  verslag_gunning_openbaar: {
+    group:"Verslagen", phase:"verslag", nativeHeadings:true,
+    title:"Gunningsverslag — Openbare Procedure",
+    sub:"Verslag van nazicht offertes en gemotiveerde gunningsbeslissing voor een openbare procedure, met percelen, selectie- en gunningscriteria.",
+    sections:[
+      {name:"Project", fields:[
+        {key:"project_ref", label:"Projectreferentie", type:"text", placeholder:"bv. AZO 2026 — Bedden", hint:"Zelfde referentie gebruiken bij alle documenten van dit dossier koppelt automatisch bedrijfsgegevens en kandidatenlijsten door."},
+      ]},
+      {name:"Opdracht", fields:[
+        {key:"voorwerp", label:"Voorwerp van de opdracht", type:"text", placeholder:"bv. Levering van Zorgbedden"},
+        {key:"wijze_gunning", label:"Wijze van gunning", type:"textarea", placeholder:"bv. Openbare procedure met verschillende gunningscriteria"},
+        {key:"aankondiging_tekst", label:"Aankondiging — samenvatting ontvangen offertes per perceel", type:"textarea", placeholder:"bv. Perceel 1: 2 offertes tijdig ontvangen"},
+      ]},
+      {name:"Percelen", fields:[
+        {key:"percelen", label:"Percelen", type:"table", addLabel:"+ Perceel toevoegen", columns:[
+          {key:"titel", label:"Titel perceel", placeholder:"bv. Perceel 1: Zorgbedden met voornamelijk ziekenhuisbedden"},
+        ]},
+        {key:"inschrijvers", label:"Inschrijvers per perceel", type:"table", addLabel:"+ Inschrijver toevoegen", columns:[
+          {key:"perceel", label:"Perceel (exact zoals hierboven)", placeholder:"bv. Perceel 1: Zorgbedden met voornamelijk ziekenhuisbedden"},
+          {key:"naam", label:"Handelsnaam", wide:true, placeholder:"bv. Haelvoet NV"},
+          {key:"adres", label:"Adres", wide:true, placeholder:"bv. Leon Bekaertstraat 8, 8770 Ingelmunster"},
+        ]},
+      ]},
+      {name:"Onderzoek uitsluitingsgronden", fields:[
+        {key:"uitsluiting_tekst", label:"Onderzoek uitsluitingsgronden", type:"textarea", placeholder:"bv. Geen uitsluitingsgronden vastgesteld. Geen enkele inschrijver dient te worden uitgesloten."},
+      ]},
+      {name:"Selectiecriteria — Economische en financiële draagkracht", fields:[
+        {key:"selectie_eco", label:"Economische en financiële draagkracht", type:"table", addLabel:"+ Criterium toevoegen (max. 6)", columns:[
+          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. De omzet bij minimaal 5 klanten gedurende de afgelopen 3 jaar"},
+          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Minimaal 95.000 euro per jaar bij één klant, gestaafd door certificaat."},
+        ]},
+        {key:"selectie_eco_besluit", label:"Besluit", type:"textarea", placeholder:"bv. Alle inschrijvers voldoen aan bovenstaande criteria en worden weerhouden in verdere evaluatie."},
+      ]},
+      {name:"Selectiecriteria — Technische en beroepsbekwaamheid", fields:[
+        {key:"selectie_tech", label:"Technische en beroepsbekwaamheid", type:"table", addLabel:"+ Criterium toevoegen (max. 6)", columns:[
+          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. De nodige certificaten mbt kwaliteit"},
+          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Een geldig ISO 9001 en ISO 13485 certificaat"},
+        ]},
+        {key:"selectie_tech_besluit", label:"Besluit", type:"textarea", placeholder:"bv. Alle inschrijvers dienden de certificaten in en worden weerhouden in verdere evaluatie."},
+      ]},
+      {name:"Onderzoek regelmatigheid", fields:[
+        {key:"regelmatigheid_tekst", label:"Onderzoek regelmatigheid", type:"textarea", placeholder:"bv. Er was geen aanleiding tot verder onderzoek naar abnormale prijzen. Geen onregelmatigheden vastgesteld."},
+      ]},
+      {name:"Gunningscriteria per perceel", fields:[
+        {key:"gunningscriteria", label:"Gunningscriteria", type:"table", addLabel:"+ Gunningscriterium toevoegen (max. 6 per perceel)", columns:[
+          {key:"perceel", label:"Perceel (exact zoals hierboven)", placeholder:"bv. Perceel 1: Zorgbedden met voornamelijk ziekenhuisbedden"},
+          {key:"naam", label:"Criterium", placeholder:"bv. Prijs Aankoop via netto prijslijst"},
+          {key:"gewicht", label:"Gewicht", placeholder:"bv. 30"},
+          {key:"toelichting", label:"Toelichting, evaluatiemethode en scores per inschrijver", wide:true, placeholder:"bv. Regel van drie. DISTRAC: 1.598.603,14 = 30 punten — HAELVOET: 1.778.067 = 26,97 punten"},
+        ]},
+      ]},
+      {name:"Samenvatting gunningscriteria per perceel", fields:[
+        {key:"samenvatting", label:"Totaalscore per inschrijver", type:"table", addLabel:"+ Rij toevoegen", columns:[
+          {key:"perceel", label:"Perceel (exact zoals hierboven)", placeholder:"bv. Perceel 1: Zorgbedden met voornamelijk ziekenhuisbedden"},
+          {key:"naam", label:"Inschrijver", placeholder:"bv. Haelvoet NV"},
+          {key:"totaal", label:"Totaalscore", placeholder:"bv. 138,87 punten (op 170)"},
+        ]},
+      ]},
+      {name:"Gunningsvoorstel", fields:[
+        {key:"gunningsvoorstel", label:"Gunning per perceel", type:"table", addLabel:"+ Perceel toevoegen", columns:[
+          {key:"perceel", label:"Perceel (exact zoals hierboven)", placeholder:"bv. Perceel 1: Zorgbedden met voornamelijk ziekenhuisbedden"},
+          {key:"periode", label:"Periode", placeholder:"bv. 4 jaar"},
+          {key:"gekozen", label:"Gekozen inschrijver", placeholder:"bv. Haelvoet NV"},
+          {key:"datum_offerte", label:"Datum offerte", placeholder:"bv. 30 december 2022"},
+          {key:"bedrag", label:"Bedrag (excl. btw)", placeholder:"bv. 1.778.067 euro"},
+        ]},
+      ]},
+      {name:"Ondertekening", fields:[
+        {key:"contact_naam", label:"Naam ondertekenaar", type:"text", default:CONTACT_DEFAULT.contact_naam},
+        {key:"contact_functie", label:"Functie", type:"text", default:CONTACT_DEFAULT.contact_functie},
+        {key:"datum_ondertekening", label:"Datum", type:"date"},
+      ]},
+    ],
+    render(d){
+      const percelen = d.percelen || [];
+      const inschrijvers = d.inschrijvers || [];
+      const gunningscriteria = d.gunningscriteria || [];
+      const samenvatting = d.samenvatting || [];
+      const gunningsvoorstel = d.gunningsvoorstel || [];
+
+      const rowsFor = (arr, titel) => arr.filter(r => (r.perceel||"").trim().toLowerCase() === (titel||"").trim().toLowerCase());
+
+      const perceelBlokken = percelen.length ? percelen.map(p => {
+        const insVoorPerceel = rowsFor(inschrijvers, p.titel);
+        const gcVoorPerceel = rowsFor(gunningscriteria, p.titel);
+        const samVoorPerceel = rowsFor(samenvatting, p.titel);
+
+        const inschrijversHtml = insVoorPerceel.length ? `
+          <table class="doc-table">
+          <thead><tr><th><strong>Handelsnaam en adres van de inschrijvers</strong></th></tr></thead>
+          <tbody><tr><td><ol type="1">
+            ${insVoorPerceel.map(i => `<li><p>${fill(i.naam,"Handelsnaam")}, ${fill(i.adres,"adres")}</p></li>`).join("")}
+          </ol></td></tr></tbody>
+          </table>` : `<p>${fill("", "Nog geen inschrijvers toegevoegd voor dit perceel.")}</p>`;
+
+        const gcHtml = gcVoorPerceel.length ? gcVoorPerceel.map(c => `
+          <table class="doc-table">
+          <thead><tr><th><strong>${fill(c.naam,"Criterium")}</strong></th><th><strong>${fill(c.gewicht,"Gewicht")}</strong></th></tr></thead>
+          <tbody><tr><td colspan="2">${nl2br(c.toelichting||"")||fill("","Toelichting, evaluatiemethode en scores per inschrijver")}</td></tr></tbody>
+          </table>`).join("") : "";
+
+        const samHtml = samVoorPerceel.length ? `
+          <p><strong>Samenvatting gunningscriteria ${esc(p.titel)}:</strong></p>
+          <table class="doc-table">
+          <thead><tr><th>Inschrijver</th><th>Totaalscore</th></tr></thead>
+          <tbody>
+            ${samVoorPerceel.map(s => `<tr><td>${fill(s.naam,"Inschrijver")}</td><td>${fill(s.totaal,"Totaalscore")}</td></tr>`).join("")}
+          </tbody>
+          </table>` : "";
+
+        return `
+          <p><em><strong>${esc(p.titel||"Perceel")}</strong></em></p>
+          ${inschrijversHtml}
+          ${gcHtml}
+          ${samHtml}
+        `;
+      }).join("") : `<p>${fill("", "Nog geen percelen toegevoegd.")}</p>`;
+
+      const gunningsvoorstelHtml = gunningsvoorstel.length ? gunningsvoorstel.map(g => `
+        <p>${esc(g.perceel||"Perceel")} en voor een periode van ${fill(g.periode,"periode")}:</p>
+        <ul>
+          <li><p>De economisch meest voordelige regelmatige offerte, ingediend door <strong>${fill(g.gekozen,"gekozen inschrijver")}</strong></p></li>
+          <li><p>Tegen de rekenkundige verbeterde totaalprijs in de offerte van ${fill(g.datum_offerte,"datum offerte")} voor een bedrag van ${fill(g.bedrag,"bedrag")} excl. btw en tegen de eenheidsprijzen, vermeld in de inventaris.</p></li>
+        </ul>
+      `).join("") : `<p>${fill("", "Nog geen gunningsvoorstel per perceel ingevuld.")}</p>`;
+
+      return `
+        ${letterhead("Referte", d.project_ref)}
+        <div class="doc-body">
+          <p class="verslag-h"><strong><u>Verslag van nazicht offertes — gemotiveerde gunningsbeslissing</u></strong></p>
+          <p>Verslag van nazicht van de offertes met gemotiveerde gunningsbeslissing voor de opdracht omschreven in de opdrachtdocumenten met referte ${fill(d.project_ref,"referte")} van de aanbestedende overheid Samenaankoop AZO vzw.</p>
+
+          <table class="doc-table">
+          <thead><tr><th>
+            <p><strong>Aanbestedende overheid:</strong><br/>Samenaankoop AZO vzw<br/>Torhoutsestraat 338</p>
+            <p>8020 Ruddervoorde</p>
+            <p><strong>Voorwerp van de opdracht:</strong><br/>${fill(d.voorwerp,"Voorwerp van de opdracht")}</p>
+            <p><strong>Wijze van gunning:</strong><br/>${nl2br(d.wijze_gunning||"")||fill("","Wijze van gunning")}</p>
+          </th></tr></thead>
+          <tbody></tbody>
+          </table>
+
+          <p>Na aankondiging van de opdracht op de e-Tendering internetsite <a href="https://eten.publicprocurement.be">https://eten.publicprocurement.be</a> werden voor:</p>
+          <p>${nl2br(d.aankondiging_tekst||"")||fill("","Samenvatting ontvangen offertes per perceel")}</p>
+
+          <p class="verslag-h"><strong><u>Percelen, inschrijvers en beoordeling</u></strong></p>
+          ${perceelBlokken}
+
+          <p class="verslag-h"><strong><u>Onderzoek uitsluitingsgronden</u></strong></p>
+          <p>${nl2br(d.uitsluiting_tekst||"")||fill("","Onderzoek uitsluitingsgronden")}</p>
+
+          <p class="verslag-h"><strong><u>Selectiecriteria</u></strong></p>
+          <p><strong><u>Economische en financiële draagkracht van de inschrijver</u></strong></p>
+          <table class="doc-table">
+          <thead><tr><th>Nr.</th><th>Selectiecriteria</th><th>Minimumvereisten</th></tr></thead>
+          <tbody>
+            ${(d.selectie_eco||[]).map((r,i)=>`<tr><td>${i+1}</td><td>${fill(r.criterium,"Selectiecriterium")}</td><td>${fill(r.minimum,"Minimumvereiste")}</td></tr>`).join("") || `<tr><td colspan="3">${fill("","Nog geen selectiecriteria toegevoegd.")}</td></tr>`}
+          </tbody>
+          </table>
+          <p><strong>Besluit:</strong> ${nl2br(d.selectie_eco_besluit||"")||fill("","Besluit economische/financiële selectie")}</p>
+
+          <p><strong><u>Technische en beroepsbekwaamheid van de inschrijver</u></strong></p>
+          <table class="doc-table">
+          <thead><tr><th>Nr.</th><th>Selectiecriteria</th><th>Minimumvereisten</th></tr></thead>
+          <tbody>
+            ${(d.selectie_tech||[]).map((r,i)=>`<tr><td>${i+1}</td><td>${fill(r.criterium,"Selectiecriterium")}</td><td>${fill(r.minimum,"Minimumvereiste")}</td></tr>`).join("") || `<tr><td colspan="3">${fill("","Nog geen selectiecriteria toegevoegd.")}</td></tr>`}
+          </tbody>
+          </table>
+          <p><strong>Besluit:</strong> ${nl2br(d.selectie_tech_besluit||"")||fill("","Besluit technische selectie")}</p>
+
+          <p class="verslag-h"><strong><u>Onderzoek regelmatigheid</u></strong></p>
+          <p>${nl2br(d.regelmatigheid_tekst||"")||fill("","Onderzoek regelmatigheid")}</p>
+
+          <p class="verslag-h"><strong><u>Gunningsvoorstel</u></strong></p>
+          <p>De openbare procedure voor ${fill(d.voorwerp,"voorwerp")} wordt overeenkomstig de bepalingen van het bestek gegund aan:</p>
+          ${gunningsvoorstelHtml}
+          <p>De opdracht moet uitgevoerd worden overeenkomstig de toepasselijke bepalingen van het bestek ${fill(d.project_ref,"referte")}.</p>
+
+          <p>${fill(d.contact_naam, CONTACT_DEFAULT.contact_naam)},</p>
+          <p>${fill(d.contact_functie, CONTACT_DEFAULT.contact_functie)}, ${d.datum_ondertekening ? formatDate(d.datum_ondertekening) : fill("","datum")}.</p>
         </div>
         ${docFooter()}
       `;
