@@ -867,693 +867,104 @@ return {
       ]},
     ],
     render(d){
+      const kandidaten = d.kandidaten || [];
+      const criteriaEco = d.criteria_economisch || [];
+      const criteriaTech = d.criteria_technisch || [];
+      const nazicht = d.nazicht || [];
+      const geselecteerd = d.besluit_geselecteerd || [];
+      const nietGeselecteerd = d.besluit_niet_geselecteerd || [];
+      const percelenList = (d.percelen||"").split("\n").map(s=>s.trim()).filter(Boolean);
+      const ramingList = (d.raming||"").split("\n").map(s=>s.trim()).filter(Boolean);
+
       return `
         ${letterhead(null, d.besteknummer)}
         <div class="doc-body">
           <p><strong><u>VERSLAG VAN NAZICHT VAN DE AANVRAGEN TOT DEELNEMING</u></strong></p>
-          <p><strong>Overheidsopdracht:</strong> Raamovereenkomst voor de levering van droge voeding en zuivel / diepvriesproducten – 2 percelen.</p>
-          <ul>
-          <li><p>Perceel 1: droge voeding en zuivel;</p></li>
-          <li><p>Perceel 2: diepvriesproducten.</p></li>
-          </ul>
-          <p>Het betreft een raamopdracht met meerdere deelnemers per perceel. Er zullen maximaal 3 deelnemers per perceel worden weerhouden en dit conform de voorwaarden vermeld in het bijzonder bestek.</p>
-          <p>De toewijzing van de deelopdrachten gebeurt via een cascadesysteem.</p>
+          <p><strong>Overheidsopdracht:</strong> ${fill(d.opdracht_titel,"Titel opdracht")}</p>
+          ${percelenList.length ? `<ul>${percelenList.map(p=>`<li><p>${esc(p)}</p></li>`).join("")}</ul>` : `<p>${fill("","Percelen (één per regel)")}</p>`}
+          <p>Het betreft een raamopdracht met meerdere deelnemers${d.max_deelnemers?` per perceel. Er zullen maximaal ${esc(d.max_deelnemers)} deelnemers per perceel worden weerhouden`:''} en dit conform de voorwaarden vermeld in het bijzonder bestek.</p>
+          ${d.toewijzing ? `<p>De toewijzing van de deelopdrachten gebeurt via ${esc(d.toewijzing)}.</p>` : ""}
           <p>Kandidaten kunnen een aanvraag tot deelneming indienen voor één of beide percelen.</p>
-          <p><strong>Datum verslag:</strong> 27 juni 2026</p>
+          <p><strong>Datum verslag:</strong> ${d.datum_verslag ? formatDate(d.datum_verslag) : fill("","datum verslag")}</p>
           <p><strong>Opdrachtgevend bestuur:</strong></p>
           <p>Naam: Samenaankoop AZO VZW</p>
           <p>Adres: Torhoutsestraat 338</p>
-          <p>8020 Oostkamp</p>
+          <p>8020 Ruddervoorde</p>
+
           <p class="verslag-h">1. <strong>Algemene gegevens</strong></p>
           <table class="doc-table">
-
           <tbody>
-          <tr>
-          <td colspan="2"><strong>Raamovereenkomst voor het leveren van incontinentiemateriaal (2 percelen)</strong></td>
-          </tr>
-          <tr>
-          <td>Leveringsplaats</td>
-          <td>Vlaanderen</td>
-          </tr>
-          <tr>
-          <td>Besteknummer</td>
-          <td>AZO 2026 – Droge voeding en zuivel / Diepvriesproducten</td>
-          </tr>
-          <tr>
-          <td>Soort opdracht</td>
-          <td>Leveringen</td>
-          </tr>
-          <tr>
-          <td>Raming</td>
-          <td><ul>
-          <li><p>Perceel 1: € 15.000.000,00 (excl. btw)</p></li>
-          <li><p>Perceel 2: € 5.000.000,00 (excl. btw)</p></li>
-          </ul></td>
-          </tr>
-          <tr>
-          <td>Gunningswijze</td>
-          <td>Mededingingsprocedure met onderhandeling, rechtvaardiging: artikel 38, § 1, 1° a) (onbeschikbaarheid van onmiddellijke oplossingen) - wet van 17 juni 2016</td>
-          </tr>
-          <tr>
-          <td>Verzenddatum publicatie</td>
-          <td>14 april 2026</td>
-          </tr>
-          <tr>
-          <td>Uiterste datum voor het ontvangen van aanvragen tot deelneming</td>
-          <td>26 mei 2026 om 7u00</td>
-          </tr>
+          <tr><td colspan="2"><strong>${fill(d.opdracht_titel,"Titel opdracht")}</strong></td></tr>
+          <tr><td>Leveringsplaats</td><td>${fill(d.leveringsplaats,"Leveringsplaats")}</td></tr>
+          <tr><td>Besteknummer</td><td>${fill(d.besteknummer,"Besteknummer")}</td></tr>
+          <tr><td>Soort opdracht</td><td>${fill(d.soort_opdracht,"Soort opdracht")}</td></tr>
+          <tr><td>Raming</td><td>${ramingList.length ? `<ul>${ramingList.map(r=>`<li><p>${esc(r)}</p></li>`).join("")}</ul>` : fill("","Raming per perceel")}</td></tr>
+          <tr><td>Gunningswijze</td><td>${nl2br(d.gunningswijze||"")||fill("","Gunningswijze")}</td></tr>
+          <tr><td>Verzenddatum publicatie</td><td>${d.datum_publicatie ? formatDate(d.datum_publicatie) : fill("","Verzenddatum publicatie")}</td></tr>
+          <tr><td>Uiterste datum voor het ontvangen van aanvragen tot deelneming</td><td>${fill(d.datum_limiet,"Uiterste datum")}</td></tr>
           </tbody>
           </table>
+
           <p class="verslag-h">2. <strong>Kandidaturen</strong></p>
-          <p><em><strong><u>Perceel 1: droge voeding en zuivel</u></strong></em></p>
-          <p>Er werden tijdig 6 kandidaturen ingediend bij het bestuur:</p>
-          <table class="doc-table" style="width:100%;">
-
-          <tbody>
-          <tr>
-          <td>Nr.</td>
-          <td>Naam</td>
-          <td>Adres</td>
-          <td>Postcode</td>
-          <td>Woonplaats</td>
-          <td>Verzendwijze</td>
-          </tr>
-          <tr>
-          <td>1</td>
-          <td>SLIGRO FOOD GROUP BELGIUM NV (ON 0638.787.362)</td>
-          <td>Wingepark 10</td>
-          <td>3110</td>
-          <td>Rotselaar</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>SOLUCIOUS NV (ON 0448.692.207)</td>
-          <td>Edingensesteenweg 196</td>
-          <td>1500</td>
-          <td>Halle</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>BELGAGEL S.A. (ON 0825.103.972)</td>
-          <td>Boulevard Saint-Michel 47</td>
-          <td>1040</td>
-          <td>Etterbeek</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>BIDFOOD FLANDERS NV (ON 0886.575.545)</td>
-          <td>Kasteleinsstraat 17</td>
-          <td>9150</td>
-          <td>Kruibeke</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>5</td>
-          <td>HORECA TOTAAL BRUGGE BV (ON 0898.196.343)</td>
-          <td>Sint-Pietersgroenestraat 8-10</td>
-          <td>8000</td>
-          <td>Brugge</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>6</td>
-          <td>BIEBUYCK NV (ON 0426.845.827)</td>
-          <td>Industriestraat 25</td>
-          <td>8755</td>
-          <td>Wingene</td>
-          <td>Elektronisch</td>
-          </tr>
-          </tbody>
-          </table>
-          <p>BIEBUYCK NV bevestigde op 9.06.2026 per mail dat zij enkel voor perceel 2 een aanvraag tot deelneming wenste in te dienen en dat het aanvinken van perceel 1 een vergissing betrof. Zij worden hieronder bijgevolg niet verder beoordeeld met betrekking tot perceel 1, waarvoor geen stukken werden ingediend.</p>
-          <p><em><strong><u>Perceel 2: diepvriesproducten</u></strong></em></p>
-          <p>Er werden 8 kandidaturen ingediend bij het bestuur:</p>
-          <table class="doc-table" style="width:100%;">
-
-          <tbody>
-          <tr>
-          <td>Nr.</td>
-          <td>Naam</td>
-          <td>Adres</td>
-          <td>Postcode</td>
-          <td>Woonplaats</td>
-          <td>Verzendwijze</td>
-          </tr>
-          <tr>
-          <td>1</td>
-          <td>SLIGRO FOOD GROUP BELGIUM NV (ON 0638.787.362)</td>
-          <td>Wingepark 10</td>
-          <td>3110</td>
-          <td>Rotselaar</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>BIEBUYCK NV (ON 0426.845.827)</td>
-          <td>Industriestraat 25</td>
-          <td>8755</td>
-          <td>Wingene</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>SOLUCIOUS NV (ON 0448.692.207)</td>
-          <td>Edingensesteenweg 196</td>
-          <td>1500</td>
-          <td>Halle</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>BELGAGEL S.A. (ON 0825.103.972)</td>
-          <td>Boulevard Saint-Michel 47</td>
-          <td>1040</td>
-          <td>Etterbeek</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>5</td>
-          <td>BIDFOOD FLANDERS NV (ON 0886.575.545)</td>
-          <td>Kasteleinsstraat 17</td>
-          <td>9150</td>
-          <td>Kruibeke</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>6</td>
-          <td>HORECA TOTAAL BRUGGE BV (ON 0898.196.343)</td>
-          <td>Sint-Pietersgroenestraat 8-10</td>
-          <td>8000</td>
-          <td>Brugge</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>7</td>
-          <td>FRIBONA NV (ON 0405.186.123)</td>
-          <td>Vliegweg 23</td>
-          <td>8020</td>
-          <td>Oostkamp</td>
-          <td>Elektronisch</td>
-          </tr>
-          <tr>
-          <td>8</td>
-          <td>SYSCO BELGIUM NV (ON 0445.725.886)</td>
-          <td>Rijksweg (BOR) 19</td>
-          <td>2880</td>
-          <td>Bornem</td>
-          <td>Elektronisch</td>
-          </tr>
-          </tbody>
-          </table>
-          <p class="verslag-h">3. <strong>Uitsluitingsgronden en kwalitatieve selectie van de kandidaten</strong></p>
-          <p><strong><u>Vereiste documenten en attesten</u></strong></p>
-          <p><strong>Uitsluitingsgronden: juridische situatie:</strong><br/>
-          Het UEA, waarmee de ondernemer verklaart dat hij zich niet bevindt in een van de uitsluitingssituaties als bedoeld in de artikelen 67 tot en met 69 van de wet van 17 juni 2016.</p>
-          <p>Artikel 70 van de wet van 17 juni 2016 betreffende de overheidsopdrachten is van toepassing.</p>
-          <p>Voor de in artikel 67 van de wet bedoelde uitsluitingsgronden deelt de gegadigde of inschrijver op eigen initiatief mee of hij bij het begin van de procedure de in artikel 70, lid 1, bedoelde corrigerende maatregelen heeft genomen.</p>
-          <p><strong><u>Economische en financiële draagkracht van de kandidaat (selectiecriteria)</u></strong></p>
-          <p><em><strong><u>Perceel 1: droge voeding en zuivel</u></strong></em></p>
+          ${kandidaten.length ? `
           <table class="doc-table">
-
+          <thead><tr><th>Naam</th><th>Perceel</th><th>Adres</th><th>Postcode</th><th>Woonplaats</th><th>Verzendwijze</th></tr></thead>
           <tbody>
-          <tr>
-          <td>Nr.</td>
-          <td>Selectiecriteria</td>
-          <td>Minimumvereisten</td>
-          </tr>
-          <tr>
-          <td>1.</td>
-          <td><blockquote>
-          <p>Een verklaring <u>van de revisor</u> betreffende de omzet van de onderneming, over de laatste 3 gepubliceerde boekjaren.</p>
-          </blockquote></td>
-          <td><p>De omzet in de producten, die het voorwerp van</p>
-          <p>deze opdracht uitmaken, bedraagt in <u>elk</u> van deze boekjaren minstens 20.000.000,00 euro per jaar.</p></td>
-          </tr>
-          <tr>
-          <td>2.</td>
-          <td><blockquote>
-          <p>Financiële gezondheid.</p>
-          </blockquote></td>
-          <td>De kandidaat leed geen bedrijfsverlies (post 9901 resultatenrekening) volgens de jaarrekeningen van de laatste 3 gepubliceerde boekjaren.</td>
-          </tr>
+            ${kandidaten.map(k=>`<tr><td>${fill(k.naam,"Naam")}</td><td>${fill(k.perceel,"Perceel")}</td><td>${fill(k.adres,"Adres")}</td><td>${fill(k.postcode,"Postcode")}</td><td>${fill(k.plaats,"Woonplaats")}</td><td>${fill(k.verzendwijze,"Verzendwijze")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p><em><strong><u>Perceel 2: diepvriesproducten</u></strong></em></p>
+          </table>` : `<p>${fill("","Nog geen kandidaturen toegevoegd.")}</p>`}
+          ${d.kandidaturen_opmerking ? `<p>${nl2br(d.kandidaturen_opmerking)}</p>` : ""}
+
+          <p class="verslag-h">3. <strong>Selectiecriteria</strong></p>
+          <p><strong><u>Economische en financiële draagkracht</u></strong></p>
           <table class="doc-table">
-
+          <thead><tr><th>Perceel</th><th>Selectiecriterium</th><th>Minimumvereiste</th></tr></thead>
           <tbody>
-          <tr>
-          <td>Nr.</td>
-          <td>Selectiecriteria</td>
-          <td>Minimumvereisten</td>
-          </tr>
-          <tr>
-          <td>1.</td>
-          <td><blockquote>
-          <p>Een verklaring <u>van de revisor</u> betreffende de omzet van de onderneming, over de laatste 3 gepubliceerde boekjaren.</p>
-          </blockquote></td>
-          <td><p>De omzet in de producten, die het voorwerp van</p>
-          <p>deze opdracht uitmaken, bedraagt in <u>elk</u> van deze boekjaren minstens 10.000.000,00 euro per jaar.</p></td>
-          </tr>
-          <tr>
-          <td>2.</td>
-          <td><blockquote>
-          <p>Financiële gezondheid.</p>
-          </blockquote></td>
-          <td>De kandidaat leed geen bedrijfsverlies (post 9901 resultatenrekening) volgens de jaarrekeningen van de laatste 3 gepubliceerde boekjaren.</td>
-          </tr>
+            ${criteriaEco.length ? criteriaEco.map(c=>`<tr><td>${fill(c.perceel,"alle percelen")}</td><td>${fill(c.criterium,"Selectiecriterium")}</td><td>${fill(c.minimum,"Minimumvereiste")}</td></tr>`).join("") : `<tr><td colspan="3">${fill("","Nog geen criteria toegevoegd.")}</td></tr>`}
           </tbody>
           </table>
-          <p class="verslag-sub">Technische en beroepsbekwaamheid van de kandidaat (selectiecriteria)</p>
-          <p><em><strong><u>Perceel 1: droge voeding en zuivel</u></strong></em></p>
+          <p><strong><u>Technische en beroepsbekwaamheid</u></strong></p>
           <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th>Nr.</th>
-          <th>Selectiecriteria</th>
-          <th>Minimumvereisten</th>
-          </tr>
-          </thead>
+          <thead><tr><th>Perceel</th><th>Selectiecriterium</th><th>Minimumvereiste</th></tr></thead>
           <tbody>
-          <tr>
-          <td>1</td>
-          <td>Teneinde zijn technische bekwaamheid aan te tonen zal de inschrijver aantonen dat hij ervaring heeft met gelijkaardige opdrachten (het leveren van droge voeding en zuivel).</td>
-          <td><p>Gelijkaardige referenties in de loop van de laatste 3 jaar<sup class="fn-ref">1</sup> waarvan:<br/>
-          - minstens 1 met een minimale waarde van 200.000,00 euro excl. BTW per jaar;<br/>
-          - minstens 3 <u>andere</u> met een minimale waarde van 100.000,00 euro excl. BTW per jaar.</p>
-          <p>Hiertoe voegt de inschrijver volgende zaken bij de aanvraag tot deelneming:<br/>
-          - Naam opdrachtgever;<br/>
-          - Looptijd van de opdracht;<br/>
-          - Waarde van de opdracht;<br/>
-          - Plaats van de opdracht;<br/>
-          - Aard van de opdracht.</p></td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>De inschrijver voldoet aan alle wettelijke verplichtingen omtrent voedselveiligheid en HACCP.</td>
-          <td>De inschrijver dient minstens één van volgende geldige certificaten (of gelijkwaardig) te kunnen voorleggen:<br/>
-          - BRCGS;<br/>
-          - IFS;<br/>
-          - ISO 2200.</td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>De inschrijver moet over de nodige vergunningen en/of erkenningen beschikken om handel te drijven in de goederen die aangeboden worden.</td>
-          <td>Attest van het FAVV.</td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>De inschrijver draagt bij tot traceerbaarheid.</td>
-          <td>De inschrijver toont aan, met een SLA of kwaliteitshandboek, dat hij de klant tijdig kan informeren bij een product die niet conform is of welke lotnummers geleverd zijn.</td>
-          </tr>
-          <tr>
-          <td>5</td>
-          <td>De inschrijver kan leveren vanuit een depot in Vlaanderen.<sup class="fn-ref">2</sup></td>
-          <td>De inschrijver geeft het adres en telefoonnummer op van zijn depot in Vlaanderen.</td>
-          </tr>
+            ${criteriaTech.length ? criteriaTech.map(c=>`<tr><td>${fill(c.perceel,"alle percelen")}</td><td>${fill(c.criterium,"Selectiecriterium")}</td><td>${fill(c.minimum,"Minimumvereiste")}</td></tr>`).join("") : `<tr><td colspan="3">${fill("","Nog geen criteria toegevoegd.")}</td></tr>`}
           </tbody>
           </table>
-          <p><em><strong><u>Perceel 2: diepvriesproducten</u></strong></em></p>
+
+          <p class="verslag-h">4. <strong>Nazicht van de kandidaten</strong></p>
+          ${nazicht.length ? `
           <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th>Nr.</th>
-          <th>Selectiecriteria</th>
-          <th>Minimumvereisten</th>
-          </tr>
-          </thead>
+          <thead><tr><th>Naam</th><th>Tijdig</th><th>RSZ</th><th>Fiscaal</th><th>Juridisch</th><th>Financieel</th><th>Technisch</th></tr></thead>
           <tbody>
-          <tr>
-          <td>1</td>
-          <td>Teneinde zijn technische bekwaamheid aan te tonen zal de inschrijver aantonen dat hij ervaring heeft met gelijkaardige opdrachten (het leveren van diepvriesproducten).</td>
-          <td><p>Gelijkaardige referenties in de loop van de laatste 3 jaar<sup class="fn-ref">3</sup> waarvan:<br/>
-          - minstens 1 met een minimale waarde van 100.000,00 euro excl. BTW per jaar;<br/>
-          - minstens 3 <u>andere</u> met een minimale waarde van 50.000,00 euro excl. BTW per jaar.</p>
-          <p>Hiertoe voegt de inschrijver volgende zaken bij de aanvraag tot deelneming:<br/>
-          - Naam opdrachtgever;<br/>
-          - Looptijd van de opdracht;<br/>
-          - Waarde van de opdracht;<br/>
-          - Plaats van de opdracht;<br/>
-          - Aard van de opdracht.</p></td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>De inschrijver voldoet aan alle wettelijke verplichtingen omtrent voedselveiligheid en HACCP.</td>
-          <td>De inschrijver dient minstens één van volgende geldige certificaten (of gelijkwaardig) te kunnen voorleggen:<br/>
-          - BRCGS;<br/>
-          - IFS;<br/>
-          - ISO 2200.</td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>De inschrijver moet over de nodige vergunningen en/of erkenningen beschikken om handel te drijven in de goederen die aangeboden worden.</td>
-          <td>Attest van het FAVV.</td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>De inschrijver draagt bij tot traceerbaarheid.</td>
-          <td>De inschrijver toont aan, met een SLA of kwaliteitshandboek, dat hij de klant tijdig kan informeren bij een product die niet conform is of welke lotnummers geleverd zijn.</td>
-          </tr>
-          <tr>
-          <td>5</td>
-          <td>De inschrijver kan leveren vanuit een depot in Vlaanderen.<sup class="fn-ref">4</sup></td>
-          <td>De inschrijver geeft het adres en telefoonnummer op van zijn depot in Vlaanderen.</td>
-          </tr>
+            ${nazicht.map(n=>`<tr><td>${fill(n.naam,"Naam")}</td><td>${fill(n.tijdig,"Ja")}</td><td>${fill(n.rsz,"OK")}</td><td>${fill(n.fiscaal,"OK")}</td><td>${fill(n.juridisch,"OK")}</td><td>${fill(n.financieel,"OK")}</td><td>${fill(n.technisch,"OK")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p class="verslag-h">4. <strong>Samenvatting van het nazicht van de kandidaten</strong></p>
-          <p><em><strong><u>Perceel 1: droge voeding en zuivel</u></strong></em></p>
+          </table>` : `<p>${fill("","Nog geen nazicht ingevuld.")}</p>`}
+
+          <p class="verslag-h">5. <strong>Besluit — geselecteerde kandidaten</strong></p>
+          ${geselecteerd.length ? `
           <table class="doc-table">
-
+          <thead><tr><th>Naam</th><th>Motivering</th></tr></thead>
           <tbody>
-          <tr>
-          <td>Naam</td>
-          <td>Tijdig</td>
-          <td>RSZ*</td>
-          <td>Fisc. verpl.**</td>
-          <td>Jur.¹</td>
-          <td>Fin.²</td>
-          <td>Techn.³</td>
-          </tr>
-          <tr>
-          <td colspan="7">SLIGRO FOOD GROUP BELGIUM NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">SOLUCIOUS NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          <td>OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">BELGAGEL S.A.</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          <td>NIET OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">BIDFOOD FLANDERS NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">HORECA TOTAAL BRUGGE BV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          </tr>
+            ${geselecteerd.map(g=>`<tr><td>${fill(g.naam,"Naam")}</td><td>${fill(g.motivering,"Motivering")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p><em>* of RSVZ voor zelfstandigen</em></p>
-          <p><em>** Attest fiscale verplichtingen</em></p>
-          <p><em>¹ Juridische situatie</em></p>
-          <p><em>² Economische en financiële draagkracht</em></p>
-          <p><em>³ Technische en beroepsbekwaamheid</em></p>
-          <p><em><strong><u>Perceel 2: diepvriesproducten</u></strong></em></p>
+          </table>` : `<p>${fill("","Nog geen geselecteerde kandidaten toegevoegd.")}</p>`}
+
+          <p class="verslag-h">6. <strong>Besluit — niet-geselecteerde kandidaten</strong></p>
+          ${nietGeselecteerd.length ? `
           <table class="doc-table">
-
+          <thead><tr><th>Naam</th><th>Motivering (juridisch gemotiveerd)</th></tr></thead>
           <tbody>
-          <tr>
-          <td>Naam</td>
-          <td>Tijdig</td>
-          <td>RSZ*</td>
-          <td>Fisc. verpl.**</td>
-          <td>Jur.¹</td>
-          <td>Fin.²</td>
-          <td>Techn.³</td>
-          </tr>
-          <tr>
-          <td colspan="7">SLIGRO FOOD GROUP BELGIUM NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">BIEBUYCK NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">SOLUCIOUS NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          <td>OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">BELGAGEL S.A.</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          <td>NIET OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">BIDFOOD FLANDERS NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">HORECA TOTAAL BRUGGE BV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">FRIBONA NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          </tr>
-          <tr>
-          <td colspan="7">SYSCO BELGIUM NV</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td>Ja</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>OK</td>
-          <td>NIET OK</td>
-          <td>OK</td>
-          </tr>
+            ${nietGeselecteerd.map(g=>`<tr><td>${fill(g.naam,"Naam")}</td><td>${fill(g.motivering,"Motivering")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p class="verslag-h">5. <strong>Besluit van de kwalitatieve selectie</strong></p>
-          <p><em><strong><u>Perceel 1: droge voeding en zuivel</u></strong></em></p>
-          <p>Volgende kandidaten zijn uitgesloten of hun kandidaturen bevatten essentiële tekortkomingen en worden dus <u>niet geselecteerd</u>:</p>
-          <table class="doc-table">
+          </table>` : `<p>Alle kandidaten werden geselecteerd.</p>`}
 
-          <tbody>
-          <tr>
-          <td>Naam</td>
-          <td>Motivering</td>
-          </tr>
-          <tr>
-          <td>SOLUCIOUS NV (ON 0448.692.207)</td>
-          <td>In het kader van de economische en financiële draagkracht van de inschrijver werd gepolst naar de financiële gezondheid van de kandidaat. Hij mocht geen bedrijfsverlies (post 9901 resultatenrekening) hebben geleden in de laatste drie gepubliceerde boekjaren. <strong>Echter leed de onderneming zowel in het boekjaar met balansdatum 31.03.2024 en het boekjaar met balansdatum 31.03.2025 een verlies op de post 9901 van de resultatenrekening.</strong></td>
-          </tr>
-          <tr>
-          <td>BELGAGEL S.A. (ON 0825.103.972)</td>
-          <td><p>In het kader van de economische en financiële draagkracht van de inschrijver werd gepolst naar de omzet van de onderneming over de laatste drie gepubliceerde boekjaren. De omzet in de producten die het voorwerp van deze opdracht uitmaken, diende in elk van deze boekjaren minstens 20.000.000,00 euro te bedragen. <strong>De onderneming haalde in geen enkele van de voorgelegde boekjaren een omzet van minstens 20.000.000,00 euro</strong>.</p>
-          <p>Daarnaast diende de kandidaat aan te tonen dat hij ervaring heeft met gelijkaardige opdrachten (zijnde: het leveren van droge voeding en zuivel). Hij diende hiervoor gelijkaardige referenties in de zorgsector voor te leggen uit de laatste drie jaar, waarvan minstens één met een minimale waarde van 200.000,00 euro excl. btw per jaar en minstens drie andere met een minimale waarde van 100.000,00 euro excl. btw per jaar. <strong>De kandidaat bezorgde de aanbestedende overheid echter enkel referenties met betrekking tot perceel 2</strong> (diepvriesproducten).</p>
-          <p>Artikel 66, § 3 van de Wet Overheidsopdrachten biedt enkel de mogelijkheid om documenten <u>aan te vullen of toe te lichten</u>, <u>doch niet om de aanvraag tot deelneming te wijzigen, in die zin dat andere referenties zouden worden opgegeven.</u></p>
-          <p>Een regularisatie conform artikel 76, §4 KB Plaatsing kan er <u>niet</u> toe leiden dat de betrokken inschrijver de onregelmatigheden in zijn offerte/aanvraag tot deelneming op zodanige wijze rechtzet <u>dat de aangebrachte verbeteringen of aanpassingen neerkomen op de indiening van een nieuwe offerte</u>.</p>
-          <p>Een regularisatie toelaten in de zin dat er <u>nieuwe</u> referenties worden ingediend, is <u>strijdig met het gelijkheidsbeginse</u>l gezien deze referenties tot de essentie van de aanvraag tot deelneming behoren.</p>
-          <p>Gezien er <strong>geen referenties</strong> werden ingediend voor dit perceel kan de aanbestedende overheid de aanvraag tot deelneming niet selecteren.</p></td>
-          </tr>
-          </tbody>
-          </table>
-          <p>Volgende kandidaten worden <u>geselecteerd</u>:</p>
-          <table class="doc-table">
-
-          <tbody>
-          <tr>
-          <td>Naam</td>
-          <td>Motivering</td>
-          </tr>
-          <tr>
-          <td>SLIGRO FOOD GROUP BELGIUM NV (ON 0638.787.362)</td>
-          <td>Geselecteerd op basis van het Uniform Europees Aanbestedingsdocument (UEA) + controle van de bewijsstukken.</td>
-          </tr>
-          <tr>
-          <td>BIDFOOD FLANDERS NV (ON 0886.575.545)</td>
-          <td>Geselecteerd op basis van het Uniform Europees Aanbestedingsdocument (UEA) + controle van de bewijsstukken.</td>
-          </tr>
-          <tr>
-          <td>HORECA TOTAAL BRUGGE (ON 0898.196.343)</td>
-          <td>Geselecteerd op basis van het Uniform Europees Aanbestedingsdocument (UEA) + controle van de bewijsstukken.</td>
-          </tr>
-          </tbody>
-          </table>
-          <p><em><strong><u>Perceel 2: diepvriesproducten</u></strong></em></p>
-          <p>Volgende kandidaten zijn uitgesloten of hun kandidaturen bevatten essentiële tekortkomingen en worden dus <u>niet geselecteerd</u>:</p>
-          <table class="doc-table">
-
-          <tbody>
-          <tr>
-          <td>Naam</td>
-          <td>Motivering</td>
-          </tr>
-          <tr>
-          <td>SLIGRO FOOD GROUP BELGIUM NV (ON 0638.787.362)</td>
-          <td><p>In het kader van de technische en beroepsbekwaamheid van de inschrijver diende de kandidaat aan te tonen dat hij ervaring heeft met gelijkaardige opdrachten (zijnde: het leveren van diepvriesproducten). Hij diende hiervoor gelijkaardige referenties in de zorgsector voor te leggen uit de laatste drie jaar, waarvan minstens één met een minimale waarde van 100.000,00 euro excl. btw per jaar en minstens drie andere met een minimale waarde van 50.000,00 euro excl. btw per jaar. <strong>De kandidaat bezorgde de aanbestedende overheid echter enkel referenties met betrekking tot perceel 1</strong> (droge voeding en zuivel).</p>
-          <p>Artikel 66, § 3 van de Wet Overheidsopdrachten biedt enkel de mogelijkheid om documenten <u>aan te vullen of toe te lichten</u>, <u>doch niet om de aanvraag tot deelneming te wijzigen, in die zin dat andere referenties zouden worden opgegeven.</u></p>
-          <p>Een regularisatie conform artikel 76, §4 KB Plaatsing kan er <u>niet</u> toe leiden dat de betrokken inschrijver de onregelmatigheden in zijn offerte/aanvraag tot deelneming op zodanige wijze rechtzet <u>dat de aangebrachte verbeteringen of aanpassingen neerkomen op de indiening van een nieuwe offerte</u>.</p>
-          <p>Een regularisatie toelaten in de zin dat er <u>nieuwe</u> referenties worden ingediend, is <u>strijdig met het gelijkheidsbeginse</u>l gezien deze referenties tot de essentie van de aanvraag tot deelneming behoren.</p>
-          <p>Gezien er <strong>geen referenties</strong> werden ingediend voor dit perceel kan de aanbestedende overheid de aanvraag tot deelneming niet selecteren.</p></td>
-          </tr>
-          <tr>
-          <td>BIEBUYCK NV (ON 0426.845.827)</td>
-          <td><p>In het kader van de technische en beroepsbekwaamheid van de inschrijver diende de kandidaat aan te tonen dat hij ervaring heeft met gelijkaardige opdrachten (zijnde: het leveren van diepvriesproducten). Hij diende hiervoor gelijkaardige referenties in de zorgsector voor te leggen uit de laatste drie jaar, waarvan minstens één met een minimale waarde van 100.000,00 euro excl. btw per jaar en minstens drie andere met een minimale waarde van 50.000,00 euro excl. btw per jaar. <strong>De kandidaat bezorgde de aanbestedende overheid, in eerste instantie, enkel referenties met betrekking tot de jaren 2015/16/17 en dus niet met betrekking tot de laatste drie jaar.</strong> De aanbestedende overheid gaf de kandidaat de kans deze referenties te verduidelijken (in die zin dat deze referenties voor de laatste 3 jaar mogelijks nog steeds relevant waren), maar <strong>er werden nieuwe referenties ingediend die niet kunnen worden aanvaard om de hieronder vermelde redenen.</strong></p>
-          <p>Artikel 66, § 3 van de Wet Overheidsopdrachten biedt enkel de mogelijkheid om documenten <u>aan te vullen of toe te lichten</u>, <u>doch niet om de aanvraag tot deelneming te wijzigen, in die zin dat andere referenties zouden worden opgegeven.</u></p>
-          <p>Een regularisatie conform artikel 76, §4 KB Plaatsing kan er <u>niet</u> toe leiden dat de betrokken inschrijver de onregelmatigheden in zijn offerte/aanvraag tot deelneming op zodanige wijze rechtzet <u>dat de aangebrachte verbeteringen of aanpassingen neerkomen op de indiening van een nieuwe offerte</u>.</p>
-          <p>Een regularisatie toelaten in de zin dat er <u>nieuwe</u> referenties worden ingediend, is <u>strijdig met het gelijkheidsbeginse</u>l gezien deze referenties tot de essentie van de aanvraag tot deelneming behoren.</p>
-          <p>Gezien de ingediende referenties gedateerd bleken, kan de aanbestedende overheid de aanvraag tot deelneming niet selecteren.</p></td>
-          </tr>
-          <tr>
-          <td>SOLUCIOUS NV (ON 0448.692.207)</td>
-          <td>In het kader van de economische en financiële draagkracht van de inschrijver werd gepolst naar de financiële gezondheid van de kandidaat. Hij mocht geen bedrijfsverlies (post 9901 resultatenrekening) hebben geleden in de laatste drie gepubliceerde boekjaren. <strong>Echter leed de onderneming zowel in het boekjaar met balansdatum 31.03.2024 en het boekjaar met balansdatum 31.03.2025 een verlies</strong>.</td>
-          </tr>
-          <tr>
-          <td>BELGAGEL S.A. (ON 0825.103.972)</td>
-          <td><p>In het kader van de economische en financiële draagkracht van de inschrijver werd gepolst naar de omzet van de onderneming over de laatste drie gepubliceerde boekjaren. De omzet in de producten die het voorwerp van deze opdracht uitmaken, diende in elk van deze boekjaren minstens 10.000.000,00 euro te bedragen. Dit criterium diende te worden aangetoond op basis van een verklaring van een revisor. <strong>De onderneming bezorgde de aanbestedende overheid geen verklaring van een revisor, ook niet na de mogelijkheid tot regularisatie.</strong> De aanbestedende overheid ontving de gepubliceerde jaarrekeningen, maar deze documenten betreffen de volledige omzet van de onderneming. Op basis hiervan <strong>kan niet worden bepaald welke de omzet is in de producten die het voorwerp uitmaken van deze opdracht.</strong></p>
-          <p>Daarnaast diende de kandidaat aan te tonen dat hij ervaring heeft met gelijkaardige opdrachten (zijnde: het leveren diepvriesproducten). Hij diende hiervoor gelijkaardige referenties in de zorgsector voor te leggen uit de laatste drie jaar, waarvan minstens één met een minimale waarde van 100.000,00 euro excl. btw per jaar en minstens drie andere met een minimale waarde van 50.000,00 euro excl. btw per jaar. <strong>De kandidaat bezorgde de aanbestedende overheid in zijn initiële aanvraag tot deelneming referenties die niet opgesplitst werden over de laatste drie jaar, zodat het onmogelijk was na te gaan welke de waarde van de verschillende opdrachten per jaar betrof.</strong> De aanbestedende overheid gaf de kandidaat de mogelijkheid deze referenties te verduidelijken<strong>,</strong> maar <strong>men diende nieuwe referenties die niet kunnen aanvaard worden om de hieronder vermelde redenen.</strong></p>
-          <p>Artikel 66, § 3 van de Wet Overheidsopdrachten biedt enkel de mogelijkheid om documenten <u>aan te vullen of toe te lichten</u>, <u>doch niet om de aanvraag tot deelneming te wijzigen, in die zin dat andere referenties zouden worden opgegeven.</u></p>
-          <p>Een regularisatie conform artikel 76, §4 KB Plaatsing kan er <u>niet</u> toe leiden dat de betrokken inschrijver de onregelmatigheden in zijn offerte/aanvraag tot deelneming op zodanige wijze rechtzet <u>dat de aangebrachte verbeteringen of aanpassingen neerkomen op de indiening van een nieuwe offerte</u>.</p>
-          <p>Een regularisatie toelaten in de zin dat er <u>nieuwe</u> referenties worden ingediend, is <u>strijdig met het gelijkheidsbeginse</u>l gezien deze referenties tot de essentie van de aanvraag tot deelneming behoren.</p>
-          <p>Gezien de initiële offertes niet verduidelijkt werden en er nieuwe referenties werden ingediend, kan de aanbestedende overheid de aanvraag tot deelneming niet selecteren.</p></td>
-          </tr>
-          <tr>
-          <td>HORECA TOTAAL BRUGGE (ON 0898.196.343)</td>
-          <td><p>In het kader van de technische en beroepsbekwaamheid van de inschrijver diende de kandidaat aan te tonen dat hij ervaring heeft met gelijkaardige opdrachten (zijnde: het leveren van diepvriesproducten). Hij diende hiervoor gelijkaardige referenties in de zorgsector voor te leggen uit de laatste drie jaar, waarvan minstens één met een minimale waarde van 100.000,00 euro excl. btw per jaar en minstens drie andere met een minimale waarde van 50.000,00 euro excl. btw per jaar. De kandidaat bezorgde de aanbestedende overheid in zijn initiële aanvraag tot deelneming <strong>referenties die zowel droge voeding, zuivel als diepvriesproducten betroffen.</strong> De kandidaat werd gevraagd zijn ingediende referenties te verduidelijken per perceel<sup class="fn-ref">5</sup><strong>.</strong></p>
-          <p>Uit de verduidelijkingen bleek dat de initiële referenties in de aanvraag tot deelneming voor dit perceel niet voldeden aan de gestelde minimumeisen. Nieuwe referenties kunnen niet worden aanvaard omwille van de hieronder vermelde redenen.</p>
-          <p>Artikel 66, § 3 van de Wet Overheidsopdrachten biedt enkel de mogelijkheid om documenten <u>aan te vullen of toe te lichten</u>, <u>doch niet om de aanvraag tot deelneming te wijzigen, in die zin dat andere referenties zouden worden opgegeven.</u></p>
-          <p>Een regularisatie conform artikel 76, §4 KB Plaatsing kan er <u>niet</u> toe leiden dat de betrokken inschrijver de onregelmatigheden in zijn offerte/aanvraag tot deelneming op zodanige wijze rechtzet <u>dat de aangebrachte verbeteringen of aanpassingen neerkomen op de indiening van een nieuwe offerte</u>.</p>
-          <p>Een regularisatie toelaten in de zin dat er <u>nieuwe</u> referenties worden ingediend, is <u>strijdig met het gelijkheidsbeginse</u>l gezien deze referenties tot de essentie van de aanvraag tot deelneming behoren.</p>
-          <p>Gezien de <u>initiële offertes niet voldeden aan de gestelde minimumeisen</u> en nieuwe referenties niet mogen aanvaard worden, kan de aanbestedende overheid de aanvraag tot deelneming niet selecteren.</p></td>
-          </tr>
-          <tr>
-          <td>SYSCO BELGIUM NV (ON 0445.725.886)</td>
-          <td>In het kader van de economische en financiële draagkracht van de inschrijver werd gepolst naar de financiële gezondheid van de kandidaat. Hij mocht geen bedrijfsverlies (post 9901 resultatenrekening) hebben geleden in de laatste drie gepubliceerde boekjaren. <strong>Echter leed de onderneming zowel in het boekjaar met balansdatum 30.06.2024 en het boekjaar met balansdatum 30.06.2025 een verlies</strong>.</td>
-          </tr>
-          </tbody>
-          </table>
-          <p>Volgende kandidaten worden <u>geselecteerd</u>:</p>
-          <table class="doc-table">
-
-          <tbody>
-          <tr>
-          <td>Naam</td>
-          <td>Motivering</td>
-          </tr>
-          <tr>
-          <td>BIDFOOD FLANDERS NV (ON 0886.575.545)</td>
-          <td>Geselecteerd op basis van het Uniform Europees Aanbestedingsdocument (UEA) + controle van de bewijsstukken.</td>
-          </tr>
-          <tr>
-          <td>FRIBONA NV (ON 0405.186.123)</td>
-          <td>Geselecteerd op basis van het Uniform Europees Aanbestedingsdocument (UEA) + controle van de bewijsstukken.</td>
-          </tr>
-          </tbody>
-          </table>
-          <p>De ontwerper,</p>
-          <p>Frederique VANDENBUSSCHE,</p>
-          <p>Bestuurder AZO.</p>
-          <aside class="doc-footnotes">
-
-          <ol class="fn-list">
-          <li><p>Drie jaar voor de limietdatum van de aanvragen tot deelneming.</p></li>
-          <li><p>Aangezien het om voeding gaat, vindt de aanbestedende overheid het belangrijk dat er snel kan geleverd worden. Daarnaast hecht de aanbestedende overheid veel belang aan duurzaamheid.</p></li>
-          <li><p>Drie jaar voor de limietdatum van de aanvragen tot deelneming.</p></li>
-          <li><p>Aangezien het om voeding gaat, vindt de aanbestedende overheid het belangrijk dat er snel kan geleverd worden. Daarnaast hecht de aanbestedende overheid veel belang aan duurzaamheid.</p></li>
-          <li><p>Voor perceel 1 werden de <u>initieel ingediende referenties</u> verduidelijkt en bleken deze te voldoen aan de gestelde eisen waardoor de aanvraag tot deelneming voor perceel 1 als regelmatig kan worden beschouwd.</p></li>
-          </ol>
-          </aside>
-
+          <p>${fill(d.contact_naam, CONTACT_DEFAULT.contact_naam)},</p>
+          <p>${fill(d.contact_functie, CONTACT_DEFAULT.contact_functie)}.</p>
         </div>
         ${docFooter()}
       `;
     }
+
   },
 
   verslag_gunning: {
@@ -1613,974 +1024,78 @@ return {
       ]},
     ],
     render(d){
+      const inschrijvers = d.inschrijvers || [];
+      const gunningscriteria = d.gunningscriteria || [];
+      const eindscore = d.eindscore || [];
+      const besluitGunning = d.besluit_gunning || [];
+
       return `
-        ${letterhead(null, d.besteknummer)}
+        ${letterhead("Referte", d.besteknummer)}
         <div class="doc-body">
-          <p class="verslag-h">1. Nazicht offertes Incontinentiemateriaal – Gemotiveerde gunningsbeslissing<br/>
-          </p>
-          <p>Verslag van nazicht van de offertes met gemotiveerde gunningsbeslissing voor de opdracht omschreven in de opdrachtdocumenten met referte ‘AZO 2026 – Incontinentiemateriaal’ van de aanbestedende overheid Samenaankoop AZO vzw.</p>
+          <p class="verslag-h"><strong><u>Verslag van nazicht offertes — gemotiveerde gunningsbeslissing</u></strong></p>
+          <p>Verslag van nazicht van de offertes met gemotiveerde gunningsbeslissing voor de opdracht omschreven in de opdrachtdocumenten met referte ${fill(d.besteknummer,"referte")} van de aanbestedende overheid Samenaankoop AZO vzw.</p>
+
           <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th><p><strong>Aanbestedende overheid:</strong><br/>
-          Samenaankoop AZO vzw<br/>
-          Torhoutsestraat 338</p>
-          <p>8020 Ruddervoorde</p>
-          <p><strong>Voorwerp van de opdracht:</strong><br/>
-          Raamovereenkomst voor het leveren van incontinentiemateriaal:</p>
-          <ul>
-          <li><p>Perceel 1: incontinentiemateriaal voornamelijk ééndelig met kleefluier en tweedelig</p></li>
-          <li><p>Perceel 2: incontinentiemateriaal voornamelijk ééndelig met comfortgordel</p></li>
-          </ul>
-          <p>Verplichte optie voor beide percelen: aanbieden van smart diaper.</p>
-          <p><strong>Wijze van gunning:</strong><br/>
-          Mededingingsprocedure met onderhandeling (art. 38 §1, 1° a) Wet Overheidsopdrachten)</p></th>
-          </tr>
-          </thead>
-          <tbody>
-          </tbody>
+          <thead><tr><th>
+            <p><strong>Aanbestedende overheid:</strong><br/>Samenaankoop AZO vzw<br/>Torhoutsestraat 338</p>
+            <p>8020 Ruddervoorde</p>
+            <p><strong>Voorwerp van de opdracht:</strong><br/>${nl2br(d.voorwerp||"")||fill("","Voorwerp van de opdracht")}</p>
+            <p><strong>Wijze van gunning:</strong><br/>${nl2br(d.gunningswijze||"")||fill("","Wijze van gunning")}</p>
+          </th></tr></thead>
+          <tbody></tbody>
           </table>
-          <p>Na de eerste fase van de procedure werden 2 inschrijvers weerhouden voor perceel 1, conform de voorwaarden uit de selectieleidraad. Aan deze inschrijvers werd het bestek toegestuurd via e-procurement op 18 maart 2026:</p>
-          <ul>
-          <li><p>Ontex bv</p></li>
-          <li><p>Essity Belgium nv</p></li>
-          </ul>
-          <p>Na de eerste fase van de procedure werden eveneens 2 inschrijvers weerhouden voor perceel 2, conform de voorwaarden uit de selectieleidraad. Aan deze inschrijvers werd het bijzonder bestek toegestuurd via e-procurement op 18 maart 2026:</p>
-          <ul>
-          <li><p>Ontex bv</p></li>
-          <li><p>Essity Belgium nv</p></li>
-          </ul>
-          <p>De limietdatum voor het indienen van de offertes voor beide percelen was 27 april 2026 om 6u00.</p>
-          <p>Er werden via e-procurement 2 offertes tijdig ontvangen met betrekking tot perceel 1:</p>
+
+          <p><strong>Titel opdracht:</strong> ${fill(d.opdracht_titel,"Titel opdracht")}</p>
+          ${d.datum_limiet ? `<p>De limietdatum voor het indienen van de offertes was ${esc(d.datum_limiet)}.</p>` : ""}
+
+          <p class="verslag-h"><strong><u>Ontvangen offertes</u></strong></p>
+          ${inschrijvers.length ? `
           <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th><strong>Handelsnaam en adres van de inschrijvers</strong></th>
-          </tr>
-          </thead>
+          <thead><tr><th>Handelsnaam</th><th>Adres</th><th>Ondernemingsnummer</th></tr></thead>
           <tbody>
-          <tr>
-          <td><ol type="1">
-          <li><p>Ontex bv, Genthof 5, 9255 Buggenhout - ondernemingsnummer 0419.457.296 – verder genoemd ‘Ontex’</p></li>
-          <li><p>Essity Belgium nv, Berkenlaan 8/B-3, 1831 Diegem – ondernemingsnummer 0405.681.516 – verder genoemd ‘Essity’</p></li>
-          </ol></td>
-          </tr>
+            ${inschrijvers.map(i=>`<tr><td>${fill(i.naam,"Handelsnaam")}</td><td>${fill(i.adres,"Adres")}</td><td>${fill(i.ondernemingsnr,"Ondernemingsnummer")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p>Er werden via e-procurement 2 offertes ontvangen met betrekking tot perceel 2:</p>
+          </table>` : `<p>${fill("","Nog geen inschrijvers toegevoegd.")}</p>`}
+
+          <p class="verslag-h"><strong><u>Nazicht van de offertes</u></strong></p>
+          <p><strong><u>Onderzoek uitsluitingsgronden</u></strong></p>
+          <p>${nl2br(d.nazicht_uitsluiting||"")||fill("","Onderzoek uitsluitingsgronden")}</p>
+          <p><strong><u>Administratief nazicht (formeel en inhoudelijk)</u></strong></p>
+          <p>${nl2br(d.nazicht_administratief||"")||fill("","Administratief nazicht")}</p>
+          <p><strong><u>Prijsonderzoek</u></strong></p>
+          <p>${nl2br(d.nazicht_prijsonderzoek||"")||fill("","Prijsonderzoek")}</p>
+
+          <p class="verslag-h"><strong><u>Gunningscriteria en beoordeling</u></strong></p>
+          ${gunningscriteria.length ? `
           <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th><strong>Handelsnaam en adres van de inschrijvers</strong></th>
-          </tr>
-          </thead>
+          <thead><tr><th>Gunningscriterium</th><th>Max. punten</th><th>Beoordelingsmethode</th><th>Scores per inschrijver</th></tr></thead>
           <tbody>
-          <tr>
-          <td><ol type="1">
-          <li><p>Ontex bv, Genthof 5, 9255 Buggenhout - ondernemingsnummer 0419.457.296 – verder genoemd ‘Ontex’</p></li>
-          <li><p>Essity Belgium nv, Berkenlaan 8/B-3, 1831 Diegem – ondernemingsnummer 0405.681.516 – verder genoemd ‘Essity’</p></li>
-          </ol></td>
-          </tr>
+            ${gunningscriteria.map(g=>`<tr><td>${fill(g.naam,"Criterium")}</td><td>${fill(g.punten,"Max. punten")}</td><td>${nl2br(g.methode||"")||fill("","Beoordelingsmethode")}</td><td>${nl2br(g.scores||"")||fill("","Scores per inschrijver")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p>De ingediende offertes hadden verduidelijkingen en onderhandelingen nodig om tot een correcte vergelijking te kunnen komen.</p>
-          <p>Op 19.05.2026 werd aan de indieners gevraagd hun aangepaste offertes in te dienen via e-procurement voor 22.05.2026 om 18.00u.</p>
-          <p>Alle voornoemde indieners dienden tijdig een aangepaste en volledig offerte in en dit voor de beide percelen.</p>
-          <p>De beoordeling gebeurt op basis van de finaal ingediende offertes.</p>
-          <p class="verslag-h">1. <strong><u>Onderzoek uitsluitingsgronden</u></strong></p>
-          <p>Dit onderzoek werd uitgevoerd tijdens de selectieprocedure.</p>
-          <p>De inschrijvers legden in een eerste fase, overeenkomstig artikel 73 van de Wet Overheidsopdrachten, een ingevuld Uniform Europees Aanbestedingsdocument (UEA) voor.</p>
-          <p>Het UEA bestaat uit een eigen verklaring die de aanbestedende overheid als voorlopig bewijs aanvaardt dat de inschrijver</p>
-          <blockquote>
-          <p>1° zich niet bevindt in een van de uitsluitingssituaties als bedoeld in de artikelen 67 tot en met 69 van de wet van 17 juni 2016, waardoor kandidaten of inschrijvers kunnen of moeten worden uitgesloten;<br/>
-          2° voldoet aan de toepasselijke selectiecriteria als vastgesteld overeenkomstig artikel 71 van de wet van 17 juni 2016;</p>
-          <p>3° voldoet aan de objectieve regels en criteria voor de beperking van het aantal kandidaten, als vastgesteld overeenkomstig artikel 79.</p>
-          </blockquote>
-          <p>De inschrijvers legden een geldig UEA voor, alsook een blanco strafregister. Er werden geen uitsluitingsgronden vastgesteld.</p>
-          <p>De inschrijvers voldeden aan het toegangsrecht tot de respectievelijke percelen waarvoor werd ingeschreven.</p>
-          <p class="verslag-h">2. <strong><u>Onderzoek kwalitatieve selectie</u></strong></p>
-          <p>Dit onderzoek werd uitgevoerd tijdens de selectieprocedure.</p>
-          <p>De voornoemde inschrijvers voldeden aan de kwalitatieve selectiecriteria voor de respectievelijke percelen waarvoor werd ingeschreven.</p>
-          <div><p class="verslag-h">3. <strong><u>Administratief nazicht van de offertes (formeel en materieel)<br/>
-          </u></strong></p><ol type="1">
-          <li><p><em>Perceel 1: incontinentiemateriaal voornamelijk ééndelig met kleefluier en tweedelig</em></p></li>
-          </ol></div>
-          <p>Op formeel vlak zijn geen onregelmatigheden vastgesteld die kunnen aanleiding geven tot het weren van de offertes. Alle gevraagde documenten werden meegeleverd bij de finale offertes.</p>
-          <p>Op inhoudelijk vlak zijn ook geen onregelmatigheden vastgesteld, die aanleiding zouden hebben gegeven tot het weren van de offertes van <strong>Ontex</strong> en <strong>Essity</strong> (artikel 76 §1 KB Plaatsing 18 april 2017). De offertes voldoen aan alle minimumeisen uit de (technische) bepalingen van het bestek. De verplichte optie wordt mee aangeboden door beide partijen.</p>
-          <p>Er werd een prijsonderzoek gevoerd, conform artikel 35 KB Plaatsing 18 april 2017. Dit gaf geen aanleiding tot een verder onderzoek naar abnormale prijzen, conform artikel 36 KB plaatsing 18 april 2017. Er werden geen abnormale prijzen vastgesteld.</p>
-          <p>De offertes van <strong>Ontex</strong> en <strong>Essity</strong> zijn regelmatig en worden hierna verder beoordeeld op basis van de gunningscriteria.</p>
-          <ol start="2" type="1">
-          <li><p><em>Perceel 2: incontinentiemateriaal voornamelijk ééndelig met comfortgordel</em></p></li>
-          </ol>
-          <p>Op formeel vlak zijn geen onregelmatigheden vastgesteld die kunnen aanleiding geven tot het weren van de offertes. Alle gevraagde documenten werden meegeleverd bij de finale offertes.</p>
-          <p>Op inhoudelijk vlak zijn ook geen onregelmatigheden vastgesteld, die aanleiding zouden hebben gegeven tot het weren van de offertes van <strong>Ontex</strong> en <strong>Essity</strong> (artikel 76 §1 KB Plaatsing 18 april 2017). De offertes voldoen aan alle minimumeisen uit de (technische) bepalingen van het bestek. De verplichte optie wordt aangeboden door beide partijen.</p>
-          <p>Er werd een prijsonderzoek gevoerd, conform artikel 35 KB Plaatsing 18 april 2017. Dit gaf geen aanleiding tot een verder onderzoek naar abnormale prijzen, conform artikel 36 KB plaatsing 18 april 2017.</p>
-          <p>De offertes van <strong>Ontex</strong> en <strong>Essity</strong> zijn regelmatig en worden hierna verder beoordeeld op basis van de gunningscriteria.</p>
-          <p class="verslag-h">4. <strong><u>Beoordeling van de offertes (zie bestek – administratieve bepalingen – gunningscriteria)</u></strong></p>
-          <p><strong><u>VOORAFGAANDE OPMERKING:</u></strong></p>
-          <p>Inschrijvers mogen op beide percelen inschrijven maar er zal slechts 1 perceel per onderneming</p>
-          <p>kunnen gegund worden. Eerst zal perceel 1 beoordeeld worden. De inschrijver aan wie perceel 1</p>
-          <p>wordt toegekend zal niet meer in aanmerking genomen worden voor perceel 2.</p>
-          <p>Het betreft een raamovereenkomst met 1 deelnemer per perceel<sup class="fn-ref">1</sup>.</p>
-          <p><em><strong>4.1. Perceel 1: incontinentiemateriaal voornamelijk ééndelig met kleefluier en tweedelig<br/>
-          </strong></em></p>
-          <p><strong><u>1. PRIJS (50 punten)</u></strong></p>
-          <p><em>‘De aanbestedende overheid zal voor de beoordeling van dit gunningscriterium gebruik maken van een vooraf samengestelde evaluatiekorf. Deze vooraf opgestelde evaluatiekorf zal bestaan uit een aantal producten met een vermoedelijke hoeveelheid die regelmatig afgenomen worden.</em></p>
-          <p><em>Evaluatie op basis van de regel van 3: score offerte = (prijs laagste offerte / prijs offerte) * gewicht van het criterium prijs.</em></p>
-          <p><em>De prijzen worden vergeleken op basis van de totalen in de korf.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
+          </table>` : `<p>${fill("","Nog geen gunningscriteria toegevoegd.")}</p>`}
+
+          <p class="verslag-h"><strong><u>Eindscore</u></strong></p>
+          ${eindscore.length ? `
           <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
+          <thead><tr><th>Inschrijver</th><th>Totaalscore</th><th>Rangschikking</th></tr></thead>
           <tbody>
-          <tr>
-          <td>Prijs</td>
-          <td>1.596.904,80 euro</td>
-          <td>1.701.968,90 euro</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>50</strong></td>
-          <td><strong>46,91</strong></td>
-          </tr>
+            ${eindscore.map(e=>`<tr><td>${fill(e.naam,"Inschrijver")}</td><td>${fill(e.totaal,"Totaalscore")}</td><td>${fill(e.rangschikking,"Rangschikking")}</td></tr>`).join("")}
           </tbody>
-          </table>
-          <p><strong><u>2. DROPKOST (10 punten)</u></strong></p>
-          <p><em>‘De inschrijver geeft de prijs van zijn dropkost aan. Voor dit criterium maken we gebruik van cases. Naast de case noteert de inschrijver de dropkost.</em></p>
-          <ul>
-          <li><p><em>Case 1: één afnemer heeft een totale bestelling per drop van 150 €</em></p></li>
-          <li><p><em>Case 2: één afnemer heeft een totale bestelling per drop van 250 €</em></p></li>
-          <li><p><em>Case 3: één afnemer heeft een totale bestelling per drop van 350 €</em></p></li>
-          </ul>
-          <p><em>De inschrijver, die per case de minste dropkost aanrekent krijgt 10 punten, de 2<sup>e</sup> minste dropkost 7 punten, 3<sup>e</sup> minste dropkost 5 punten.</em></p>
-          <p><em>Bij gelijke dropkost worden gelijke punten gegeven.</em></p>
-          <p><em>Er kunnen <strong>geen kortingen</strong> gegeven worden, enkel een kost.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
+          </table>` : `<p>${fill("","Nog geen eindscore ingevuld.")}</p>`}
 
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Case 1: 150 euro</td>
-          <td>13,50 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td>Case 2: 250 euro</td>
-          <td>0,00 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td>Case 3: 350 euro</td>
-          <td>0,00 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td>Totale dropkost</td>
-          <td>13,50 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>7</strong></td>
-          <td><strong>10</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>3. DIENSTVERLENING (40 punten)</u></strong></p>
-          <p><strong><u>3.1. ‘Must have’ en ‘nice to have’ (20 punten)</u></strong></p>
-          <p><em>‘De inschrijver vult de excellijst in met ‘must have’ en nice to have’.</em></p>
-          <p><em>Indien de inschrijver niet kan voldoen aan één van de ‘must haves’ wordt zijn offerte als substantieel onregelmatig beschouwd.</em></p>
-          <p><em>Bij de nice to haves worden er 2 punten toegekend per item die de inschrijver kan aanbieden, met een maximum van 20 punten.’</em></p>
-          <p><strong><u>Beoordeling</u></strong>:</p>
-          <p>Alle indieners voldeden aan de ‘must haves’ en dienden bijgevolg een regelmatige offerte in.</p>
-          <p>Wat de ‘nice to haves’ betreft, moet worden besloten dat iedereen voldoet aan alle acht voorgestelde items en zodoende 16 punten scoort.</p>
-          <table class="doc-table">
+          <p class="verslag-h"><strong><u>Gemotiveerd besluit</u></strong></p>
+          ${besluitGunning.length ? besluitGunning.map(b=>`
+            <p><strong>${fill(b.perceel,"Perceel")}</strong> wordt overeenkomstig de bepalingen van het bestek gegund aan <strong>${fill(b.gekozen,"gekozen inschrijver")}</strong>.</p>
+            <p>${nl2br(b.motivering||"")||fill("","Motivering")}</p>
+          `).join("") : `<p>${fill("","Nog geen gunning per perceel ingevuld.")}</p>`}
 
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Nice to have</td>
-          <td>8 items</td>
-          <td>8 items</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>16</strong></td>
-          <td><strong>16</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>3.2. Time to repair (10 punten)</u></strong></p>
-          <p><em>‘De inschrijver geeft de maximale duurtijd van het aanmelden van een klacht, tot men start met de oplossing van het probleem.</em></p>
-          <p><em>De inschrijver met de snelste TTR (time to repair) krijgt 10 punten, de tweede 7 punten, de derde 5 punten.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>TTR</td>
-          <td>1 week</td>
-          <td>24u</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>7</strong></td>
-          <td><strong>10</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p>Gezien de boeteclausule van Essity maar uitwerking krijgt als er geen remediëring plaats kan vinden na een termijn van 1 week, wordt de termijn van 1 week weerhouden als TTR voor Essity.</p>
-          <p><strong><u>3.3. Boeteclausule (10 punten)</u></strong></p>
-          <p><em>‘De inschrijver geeft aan welke boeteclausule hij toepast voor laattijdigheid (vast bedrag per dag in euro exclusief BTW) t.a.v. de hierboven opgegeven termijnen (m.a.w. wanneer hij de ingediende TTR overschrijdt).</em></p>
-          <p><em>De inschrijver met de hoogste boete per dag voor TTR (time to repair) krijgt 10 punten, de tweede 7 punten, de derde 5 punten.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Boeteclausule</td>
-          <td>50,00 per kalenderdag</td>
-          <td>50,00 euro per kalenderdag</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>10</strong></td>
-          <td><strong>10</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>3.4. Algemeen puntentotaal dienstverlening</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>‘Must have’ en ‘nice to have’</td>
-          <td>16</td>
-          <td>16</td>
-          </tr>
-          <tr>
-          <td>TTR</td>
-          <td>7</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td>Boeteclausule</td>
-          <td>10</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>33</strong></td>
-          <td><strong>36</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>4. DUURZAAMHEID (10 punten)</u></strong></p>
-          <p><em>‘De aanbestedende overheid hecht groot belang aan de ecologische impact van haar leveranciers.</em></p>
-          <p><em>De inschrijver beschrijft</em></p>
-          <p><em>1. zijn algemene ecologische bedrijfsvisie en strategie (5 punten) en</em></p>
-          <p><em>2. hoe hij deze concreet implementeert op het vlak van o.a. energie,</em></p>
-          <p><em>leveringen/transport, beheer verpakkingsafval etc (5 punten)</em></p>
-          <p><em>Hij toont een consequente en coherente strategie en implementatie aan.</em></p>
-          <p><em>Belangrijke pluspunten zijn:</em></p>
-          <ul>
-          <li><p><em>Een logisch opgebouwde strategie;</em></p></li>
-          <li><p><em>Het terugdringen van de CO2 footprint door een integratie en controle van de totale keten;</em></p></li>
-          <li><p><em>Innovatieve oplossingen;</em></p></li>
-          <li><p><em>Relevante externe certificering;</em></p></li>
-          <li><p><em>Optimalisatie transport.</em></p></li>
-          </ul>
-          <p><em>De beoordeling van deze subgunningscriteria zal als volgt gebeuren:</em></p>
-          <ul>
-          <li><p><em>100% van de punten: de nota en de daarin verwerkte visie sluit perfect aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid en overstijgt zelfs de verwachtingen. De opdrachtgever heeft geen enkele bemerking bij de vooropgestelde visie.</em></p></li>
-          <li><p><em>75% van de punten: de nota en de daarin verwerkte visie sluit goed tot zeer goed aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft één of meerdere bemerkingen bij de voorgestelde ontwerpvisie, die evenwel niet substantieel zijn.</em></p></li>
-          <li><p><em>50% van de punten: de nota en de daarin verwerkte visie sluit voldoende aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft meerdere bemerkingen bij de voorgestelde ontwerpvisie, waarvan één of enkele opmerkingen substantieel zijn.</em></p></li>
-          <li><p><em>25% van de punten: de nota en de daarin verwerkte visie sluit onvoldoende aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft meerdere substantiële bemerkingen.</em></p></li>
-          <li><p><em>0% van de punten: de nota en de daarin verwerkte visie sluit geheel niet aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft zodanig veel substantiële bemerkingen dat het aanbod niet in aanmerking te nemen valt.</em></p></li>
-          </ul>
-          <p><em>Een 0-score kan eveneens worden gegeven indien de offerte niet alle vereiste informatie bevat om deze te beoordelen in het licht van dit criterium.</em></p>
-          <p><em>In gemotiveerde gevallen kan de aanbestedende overheid tussenliggende scores toekennen.</em></p>
-          <p><em>(De beschrijving gebeurt op maximaal 4xA4, lettergrootte tenminste 10)’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <p class="verslag-sub"><u><strong>ALGEMENE ECOLOGISCHE BEDRIJFSVISIE EN STRATEGIE (5 PUNTEN):<br/>
-          </strong><br/>
-          <strong>Essity</strong></u></p>
-          <p>Essity en TENA zetten zich in om hygiëne en gezondheid te verbeteren met minder impact op het milieu en dat duurzaamheid volledig geïntegreerd is in de bedrijfsstrategie, de innovatiekracht en dagelijkse werking van Essity.</p>
-          <p>Essity haalt in dit kader volgende elementen aan:</p>
-          <ul>
-          <li><p>Ze werken mee aan de UN Sustainable Development Goals en zijn ondertekenaar van de UN Global Compact.<br/>
-          <br/>
-          - Essity streeft naar een netto-nuluitstoot tegen 2050 via klimaatmaatregelen, circulaire initiatieven en duurzame innovaties, met respect voor biodiversiteit.<br/>
-          <br/>
-          - Essity heeft doelstellingen vastgelegd binnen het Science Based Targets initiatief (SBTi) voor scope 1, 2 en 3 emissies.</p></li>
-          </ul>
-          <p>- TENA draagt eveneens bij aan de netto nuldoelstelling van Essity via productontwikkeling die gebruik en afval vermindert, optimalisatie van materialen, verhoogde recycleerbaarheid van verpakkingen en overschakeling op hernieuwbare energie.</p>
-          <p>Essity legt doelstellingen voor maar het is uit de ingediende offerte niet duidelijk hoe deze voorgaande doelstellingen zullen bereikt worden en hoe ze geïntegreerd zijn in de (eigen) bedrijfsvisie. Een coherente visie en strategie hieromtrent blijkt bijgevolg niet duidelijk uit de offerte.</p>
-          <p>Samengevat sluit de nota voldoende aan bij de visie van de opdrachtgever maar de opdrachtgever heeft meerdere bemerkingen, waarvan één of enkele opmerkingen substantieel zijn. De offerte scoort 50% voor de criterium ofwel 2,5 punten.</p>
-          <p><strong><u>Ontex</u></strong></p>
-          <p><strong><u><br/>
-          </u></strong>Ontex stelt dat duurzaamheid een integraal onderdeel vormt van de langetermijnstrategie en het waardecreatiemodel van Ontex. Er is een strategische pijler ‘sterke duurzaamheidsprestaties’ en de duurzaamheidsstrategie is opgebouwd rond drie pijlers, nl. Better for Planet, Better for People en Better for Business.</p>
-          <p>Deze ambitie wordt geconcretiseerd in de Climate Roadmap 2030.</p>
-          <p>De governance rond duurzaamheid en klimaat wordt verankerd op bestuursniveau door toezicht van een Audit&amp;Risk Committee. Voor de dagelijkse sturing is er een Chief Innovation &amp; Sustainability officer die wordt ondersteund door multidisciplinaire teams.</p>
-          <p>Ontex legt een visie en strategie waarbij wordt aangetoond hoe men de doelstellingen ook effectief wilt bereiken en opvolgt. De offerte sluit op dit vlak perfect aan bij de punten die de opdrachtgever vooropstelt. De opdrachtgever heeft geen enkele bemerking. Ontex scoort bijgevolg 100% van de punten voor dit criterium ofwel 5 punten.</p>
-          <p class="verslag-sub"><strong><u>hoe hij deze concreet implementeert op het vlak van o.a. energie, leveringen/transport, beheer verpakkingsafval etc (5 PUNTEN)</u></strong></p>
-          <p><u><strong>Essity<br/>
-          </strong><br/>
-          </u>Essity streeft naar een netto-nuluitstoot tegen 2050. Op korte termijn streeft Essity naar een 35% reductie van scope 1, 2 en 3 emissies tegen 2030 (tegenover 2016) in lijn met het SBTi traject “well below 2°C”. Op lange termijn staat de netto-nuluitstoot op het programma voor scope 1, 2 en 3 tegen 2050.</p>
-          <p>Alle houtvezels die Essity koopt en gebruikt, zijn afkomstig van leveranciers die gerectificeerd zijn volgens FSC® of PEFC™ standaarden. Essity heeft ook de New York Declaration on Forests ondertekend alsook de Vancouver Declaration.</p>
-          <p>Om sneller vooruitgang te kunnen boeken in de ontwikkeling van betere verpakkingsmaterialen, is Essity onder meer lid van de Ellen Mac Arthur Foundation (EMF) en de Circular Platic Alliance.</p>
-          <p>Naar innovatieve oplossingen toe met betrekking tot ecologie verwijst Essity naar de CO² calculator van TENA. Deze tool helpt klanten de CO² impact tijdens het gebruik te meten en te verbeteren. Om aan te tonen dat een optimaal product, afgestemd op de noden van de zorgvrager, leidt tot een</p>
-          <p>lagere CO² uitstoot tijdens het gebruik, voerde TENA de ARCTICC studie uit. Deze tool situeert zich enkel op niveau van TENA en niet op niveau van Essity zelf. Ook andere innovaties voor het beperken van de CO² uitstoot worden genomen op het niveau van TENA.</p>
-          <p>Alle productielocaties van TENA zijn gecertificeerd volgens ISO 14001, het systeem voor milieumanagement. De productiesites werken daarenboven ook volgens ISO 13485, het</p>
-          <p>kwaliteitmanagementsysteem voor medische hulpmiddelen en ISO 18001, systeem voor</p>
-          <p>arbeidsveiligheid en gezondheid. De meeste TENA producten dragen een ecolabel.</p>
-          <p>Essity zelf werd in 2025 bekroond met de platina erkenning van EcoVadis met een totaalscore van 88 op 100.</p>
-          <p>De zuivere externe certificering situeert zich dus vooral op niveau van TENA (met uitzondering van Ecovadis).</p>
-          <p>Wat de optimalisatie van het transport betreft wordt met de partners samengewerkt om de overstap</p>
-          <p>te maken naar transportopties met lage uitstoot. Essity zet in op het maximaliseren van laadcapaciteit, het optimaliseren van routes en transportmodi en het gebruik van voertuigen met lage uitstoot (mulitfuel voertuigen op vloeibaar aardgas, elektriciteit en plantaardige olie) via hun dienstverleners. In België wordt voor de reguliere leveringen samengewerkt met transportfirma Van Rooijen.</p>
-          <blockquote>
-          <p>Samengevat zet Essity zich in om de CO² uitstoot te verminderen op korte en lange termijn. Ze heeft verklaringen ondertekend om bossen te beschermen en bosproducten duurzaam in te kopen. Ze zet duidelijk in op transportoptimalisatie, ook met externe partners. Ze zet tevens in op betere verpakkingsmaterialen. Op vlak van innovatie en externe certificering beroept Essity zich dan vooral op TENA en blijken deze aspecten intern minder aanwezig en zijn in de offerte minder op bedrijfsniveau uitgewerkt.</p>
-          <p>De offerte en de daarin verwerkte visie sluit goed tot zeer goed aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft één of meerdere bemerkingen bij de voorgestelde ontwerpvisie, die evenwel niet substantieel zijn. Omwille van hiervan scoort de offerte van Essity op dit criterium 75% ofwel 3,75 punten.</p>
-          </blockquote>
-          <p><strong><u>Ontex</u></strong></p>
-          <blockquote>
-          <p>De broeikasgasreductiedoelstellingen van Ontex zijn goedgekeurd door het Science Based Targets initiative (SBTi) en hanteren 2020 als referentiejaar. Er worden reducties voorzien tegen 2030 voor zowel scope 1, 2 en 3.</p>
-          </blockquote>
-          <p>Ontex heeft een analyse uitgevoerd om te achterhalen waar de emissies ontstaan. Hieruit bleek dat meer dan 95% van de totale CO₂-voetafdruk binnen Scope 3 valt. Grondstoffen vormen de grootste bron van uitstoot, en zijn daarom het belangrijkste focusgebied binnen de klimaatstrategie. Om de emissiereductie vorm te geven worden een aantal concrete acties en verwezenlijkingen naar voor geschoven.</p>
-          <p>Daarnaast legt Ontex een aantal verwezenlijkingen voor op het vlak van Co² reductie sinds 2020 en werkt zij nog verder aan verdere maatregelen om deze reductie nog te verminderen.</p>
-          <p>Wat het transport betreft stelt Ontex dat transport goed is voor ongeveer 9% van de totale CO₂-voetafdruk. Initiatieven naar optimalisatie inzake duurzaamheid van het transport omvatten:</p>
-          <ul>
-          <li><p>Laadoptimalisatie en beperking van lege ritten</p></li>
-          <li><p>Verkorten van afstanden tussen leveranciers, fabrieken en klanten</p></li>
-          <li><p>Meer rechtstreekse leveringen van leverancier naar fabriek of klant</p></li>
-          <li><p>Samenwerking met transporteurs rond energie-efficiënte vrachtwagens</p></li>
-          <li><p>Verkenning van multimodaal transport en alternatieve brandstoffen</p></li>
-          </ul>
-          <p>Wat de verpakkingen en end-of-life-oplossingen betreft, worden volgende acties door Ontex genomen:</p>
-          <ul>
-          <li><p>Engagement voor 100% recycleerbare verpakkingen tegen 2030</p></li>
-          <li><p>Deelname aan pilootprojecten voor recycling en compostering</p></li>
-          <li><p>Partnerschap met Woosh, een Belgische start-up voor luierrecycling, met piloten in België en schaalambitie in Europa</p></li>
-          <li><p>Ontwerpoptimalisatie van producten en verpakkingen ter ondersteuning van toekomstige circulaire systemen</p></li>
-          </ul>
-          <p>Innovatie streeft Ontex na via vijf R&amp;D-centra en intensieve samenwerking met klanten en leveranciers.</p>
-          <p>Voorbeelden die hieromtrent worden gegeven zijn:</p>
-          <ul>
-          <li><p>Laag-carbon absorberingstechnologieën (bioSAP)</p></li>
-          <li><p>Mechanisch post-consumer gerecycleerde (mPCR) verpakkingen</p></li>
-          <li><p>Platformstandaardisatie om complexiteit, afval en emissies te verminderen</p></li>
-          <li><p>Hybride en herbruikbare productconcepten</p></li>
-          </ul>
-          <blockquote>
-          <p>Wat externe certificering betreft legt Ontex het volgende voor:</p>
-          </blockquote>
-          <ul>
-          <li><p>EcoVadis Gold-rating (81/100, top 3% wereldwijd)</p></li>
-          <li><p>ISO 14001 milieumanagement in alle Ontex plants</p></li>
-          <li><p>ISO 50001 energiemanagmenet in alle Europese Ontex plants</p></li>
-          <li><p>GOTS en REDcert² certificeringen</p></li>
-          </ul>
-          <blockquote>
-          <p>Samengevat gaat Ontex op onderbouwde wijze op zoek naar optimalisatie inzake CO² uitstoot en zet in op innovatie. Ze zet in op optimalisatie van transport al blijven de maatregelen hieromtrent algemeen geformuleerd. Reduceren van verpakkingsafval blijkt een uitdaging maar hiertoe worden ook enkele voorstellen geformuleerd al is dit luik minder uitgewerkt. Ontex kan naast enkele erkenningen ook relevante externe certificering voorleggen.</p>
-          <p>De offerte en de daarin verwerkte visie sluit goed tot zeer goed aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft één of meerdere bemerkingen bij de voorgestelde ontwerpvisie, die evenwel niet substantieel zijn. Omwille van hiervan scoort de offerte van Ontex op dit criterium 75% ofwel 3,75 punten.</p>
-          </blockquote>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Algemene ecologische bedrijfsvisie en strategie</td>
-          <td>50% - 2,5 punten</td>
-          <td>100% - 5 punten</td>
-          </tr>
-          <tr>
-          <td><u>hoe hij deze concreet implementeert op het vlak van o.a. energie, leveringen/transport, beheer verpakkingsafval etc</u></td>
-          <td>75% - 3,75 punten</td>
-          <td>75% - 3,75 punten</td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>6,25</strong></td>
-          <td><strong>8,75</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p class="verslag-sub"><em><strong>Perceel 2: incontinentiemateriaal voornamelijk ééndelig met comfortgordel</strong></em></p>
-          <p><strong><u>1. PRIJS (50 punten)</u></strong></p>
-          <p><em>‘De aanbestedende overheid zal voor de beoordeling van dit gunningscriterium gebruik maken van een vooraf samengestelde evaluatiekorf. Deze vooraf opgestelde evaluatiekorf zal bestaan uit een aantal producten met een vermoedelijke hoeveelheid die regelmatig afgenomen worden.</em></p>
-          <p><em>Evaluatie op basis van de regel van 3: score offerte = (prijs laagste offerte / prijs offerte) * gewicht van het criterium prijs.</em></p>
-          <p><em>De prijzen worden vergeleken op basis van de totalen in de korf.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Prijs</td>
-          <td>543.443,00 euro</td>
-          <td>587.172,00 euro</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>50</strong></td>
-          <td><strong>46,28</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>2. DROPKOST (10 punten)</u></strong></p>
-          <p><em>‘De inschrijver geeft de prijs van zijn dropkost aan. Voor dit criterium maken we gebruik van cases. Naast de case noteert de inschrijver de dropkost.</em></p>
-          <ul>
-          <li><p><em>Case 1: één afnemer heeft een totale bestelling per drop van 150 €</em></p></li>
-          <li><p><em>Case 2: één afnemer heeft een totale bestelling per drop van 250 €</em></p></li>
-          <li><p><em>Case 3: één afnemer heeft een totale bestelling per drop van 350 €</em></p></li>
-          </ul>
-          <p><em>De inschrijver, die per case de minste dropkost aanrekent krijgt 10 punten, de 2<sup>e</sup> minste dropkost 7 punten, 3<sup>e</sup> minste dropkost 5 punten.</em></p>
-          <p><em>Bij gelijke dropkost worden gelijke punten gegeven.</em></p>
-          <p><em>Er kunnen <strong>geen kortingen</strong> gegeven worden, enkel een kost.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Case 1: 150 euro</td>
-          <td>13,50 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td>Case 2: 250 euro</td>
-          <td>0,00 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td>Case 3: 350 euro</td>
-          <td>0,00 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td>Totale dropkost</td>
-          <td>13,50 euro</td>
-          <td>0,00 euro</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>7</strong></td>
-          <td><strong>10</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>3. DIENSTVERLENING (40 punten)</u></strong></p>
-          <p><strong><u>3.1. ‘Must have’ en ‘nice to have’ (20 punten)</u></strong></p>
-          <p><em>‘De inschrijver vult de excellijst in met ‘must have’ en nice to have’.</em></p>
-          <p><em>Indien de inschrijver niet kan voldoen aan één van de ‘must haves’ wordt zijn offerte als substantieel onregelmatig beschouwd.</em></p>
-          <p><em>Bij de nice to haves worden er 2 punten toegekend per item die de inschrijver kan aanbieden, met een maximum van 20 punten.’</em></p>
-          <p><strong><u>Beoordeling</u></strong>:</p>
-          <p>Alle indieners voldeden aan de ‘must haves’ en dienden bijgevolg een regelmatige offerte in.</p>
-          <p>Wat de ‘nice to haves’ betreft, moet worden besloten dat iedereen voldoet aan alle acht voorgestelde items en zodoende 16 punten scoort.</p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Nice to have</td>
-          <td>8 items</td>
-          <td>8 items</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>16</strong></td>
-          <td><strong>16</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>3.2. Time to repair (10 punten)</u></strong></p>
-          <p><em>‘De inschrijver geeft de maximale duurtijd van het aanmelden van een klacht, tot men start met de oplossing van het probleem.</em></p>
-          <p><em>De inschrijver met de snelste TTR (time to repair) krijgt 10 punten, de tweede 7 punten, de derde 5 punten.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>TTR</td>
-          <td>1 week</td>
-          <td>24u</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>7</strong></td>
-          <td><strong>10</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p>Gezien de boeteclausule van Essity maar uitwerking krijgt als er geen remediëring plaats kan vinden na een termijn van 1 week, wordt de termijn van 1 week weerhouden als TTR voor Essity.</p>
-          <p><strong><u>3.3. Boeteclausule (10 punten)</u></strong></p>
-          <p><em>‘De inschrijver geeft aan welke boeteclausule hij toepast voor laattijdigheid (vast bedrag per dag in euro exclusief BTW) t.a.v. de hierboven opgegeven termijnen (m.a.w. wanneer hij de ingediende TTR overschrijdt).</em></p>
-          <p><em>De inschrijver met de hoogste boete per dag voor TTR (time to repair) krijgt 10 punten, de tweede 7 punten, de derde 5 punten.’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Boeteclausule</td>
-          <td>50,00 per kalenderdag</td>
-          <td>50,00 euro per kalenderdag</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>10</strong></td>
-          <td><strong>10</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>3.4. Algemeen puntentotaal dienstverlening</u></strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>‘Must have’ en ‘nice to have’</td>
-          <td>16</td>
-          <td>16</td>
-          </tr>
-          <tr>
-          <td>TTR</td>
-          <td>7</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td>Boeteclausule</td>
-          <td>10</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>33</strong></td>
-          <td><strong>36</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p><strong><u>4. DUURZAAMHEID (10 punten)</u></strong></p>
-          <p><em>‘De aanbestedende overheid hecht groot belang aan de ecologische impact van haar leveranciers.</em></p>
-          <p><em>De inschrijver beschrijft</em></p>
-          <p><em>1. zijn algemene ecologische bedrijfsvisie en strategie (5 punten) en</em></p>
-          <p><em>2. hoe hij deze concreet implementeert op het vlak van o.a. energie,</em></p>
-          <p><em>leveringen/transport, beheer verpakkingsafval etc (5 punten)</em></p>
-          <p><em>Hij toont een consequente en coherente strategie en implementatie aan.</em></p>
-          <p><em>Belangrijke pluspunten zijn:</em></p>
-          <ul>
-          <li><p><em>Een logisch opgebouwde strategie;</em></p></li>
-          <li><p><em>Het terugdringen van de CO2 footprint door een integratie en controle van de totale keten;</em></p></li>
-          <li><p><em>Innovatieve oplossingen;</em></p></li>
-          <li><p><em>Relevante externe certificering;</em></p></li>
-          <li><p><em>Optimalisatie transport.</em></p></li>
-          </ul>
-          <p><em>De beoordeling van deze subgunningscriteria zal als volgt gebeuren:</em></p>
-          <ul>
-          <li><p><em>100% van de punten: de nota en de daarin verwerkte visie sluit perfect aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid en overstijgt zelfs de verwachtingen. De opdrachtgever heeft geen enkele bemerking bij de vooropgestelde visie.</em></p></li>
-          <li><p><em>75% van de punten: de nota en de daarin verwerkte visie sluit goed tot zeer goed aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft één of meerdere bemerkingen bij de voorgestelde ontwerpvisie, die evenwel niet substantieel zijn.</em></p></li>
-          <li><p><em>50% van de punten: de nota en de daarin verwerkte visie sluit voldoende aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft meerdere bemerkingen bij de voorgestelde ontwerpvisie, waarvan één of enkele opmerkingen substantieel zijn.</em></p></li>
-          <li><p><em>25% van de punten: de nota en de daarin verwerkte visie sluit onvoldoende aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft meerdere substantiële bemerkingen.</em></p></li>
-          <li><p><em>0% van de punten: de nota en de daarin verwerkte visie sluit geheel niet aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft zodanig veel substantiële bemerkingen dat het aanbod niet in aanmerking te nemen valt.</em></p></li>
-          </ul>
-          <p><em>Een 0-score kan eveneens worden gegeven indien de offerte niet alle vereiste informatie bevat om deze te beoordelen in het licht van dit criterium.</em></p>
-          <p><em>In gemotiveerde gevallen kan de aanbestedende overheid tussenliggende scores toekennen.</em></p>
-          <p><em>(De beschrijving gebeurt op maximaal 4xA4, lettergrootte tenminste 10)’</em></p>
-          <p><strong><u>Beoordeling:</u></strong></p>
-          <p class="verslag-sub"><u><strong>ALGEMENE ECOLOGISCHE BEDRIJFSVISIE EN STRATEGIE (5 PUNTEN):<br/>
-          </strong><br/>
-          </u></p>
-          <p><u><strong>Essity<br/>
-          </strong><br/>
-          </u>Essity streeft naar een netto-nuluitstoot tegen 2050. Op korte termijn streeft Essity naar een 35% reductie van scope 1, 2 en 3 emissies tegen 2030 (tegenover 2016) in lijn met het SBTi traject “well below 2°C”. Op lange termijn staat de netto-nuluitstoot op het programma voor scope 1, 2 en 3 tegen 2050.</p>
-          <p>Alle houtvezels die Essity koopt en gebruikt, zijn afkomstig van leveranciers die gerectificeerd zijn volgens FSC® of PEFC™ standaarden. Essity heeft ook de New York Declaration on Forests ondertekend alsook de Vancouver Declaration.</p>
-          <p>Om sneller vooruitgang te kunnen boeken in de ontwikkeling van betere verpakkingsmaterialen, is Essity onder meer lid van de Ellen Mac Arthur Foundation (EMF) en de Circular Platic Alliance.</p>
-          <p>Naar innovatieve oplossingen toe met betrekking tot ecologie verwijst Essity naar de CO² calculator van TENA. Deze tool helpt klanten de CO² impact tijdens het gebruik te meten en te verbeteren. Om aan te tonen dat een optimaal product, afgestemd op de noden van de zorgvrager, leidt tot een</p>
-          <p>lagere CO² uitstoot tijdens het gebruik, voerde TENA de ARCTICC studie uit. Deze tool situeert zich enkel op niveau van TENA en niet op niveau van Essity zelf. Ook andere innovaties voor het beperken van de CO² uitstoot worden genomen op het niveau van TENA.</p>
-          <p>Alle productielocaties van TENA zijn gecertificeerd volgens ISO 14001, het systeem voor milieumanagement. De productiesites werken daarenboven ook volgens ISO 13485, het</p>
-          <p>kwaliteitmanagementsysteem voor medische hulpmiddelen en ISO 18001, systeem voor</p>
-          <p>arbeidsveiligheid en gezondheid. De meeste TENA producten dragen een ecolabel.</p>
-          <p>Essity zelf werd in 2025 bekroond met de platina erkenning van EcoVadis met een totaalscore van 88 op 100.</p>
-          <p>De zuivere externe certificering situeert zich dus vooral op niveau van TENA (met uitzondering van Ecovadis).</p>
-          <p>Wat de optimalisatie van het transport betreft wordt met de partners samengewerkt om de overstap</p>
-          <p>te maken naar transportopties met lage uitstoot. Essity zet in op het maximaliseren van laadcapaciteit, het optimaliseren van routes en transportmodi en het gebruik van voertuigen met lage uitstoot (mulitfuel voertuigen op vloeibaar aardgas, elektriciteit en plantaardige olie) via hun dienstverleners. In België wordt voor de reguliere leveringen samengewerkt met transportfirma Van Rooijen.</p>
-          <blockquote>
-          <p>Samengevat zet Essity zich in om de CO² uitstoot te verminderen op korte en lange termijn. Ze heeft verklaringen ondertekend om bossen te beschermen en bosproducten duurzaam in te kopen. Ze zet duidelijk in op transportoptimalisatie, ook met externe partners. Ze zet tevens in op betere verpakkingsmaterialen. Op vlak van innovatie en externe certificering beroept Essity zich dan vooral op TENA en blijken deze aspecten intern minder aanwezig en zijn in de offerte minder op bedrijfsniveau uitgewerkt.</p>
-          <p>De offerte en de daarin verwerkte visie sluit goed tot zeer goed aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft één of meerdere bemerkingen bij de voorgestelde ontwerpvisie, die evenwel niet substantieel zijn. Omwille van hiervan scoort de offerte van Essity op dit criterium 75% ofwel 3,75 punten.</p>
-          </blockquote>
-          <p><strong><u>Ontex</u></strong></p>
-          <blockquote>
-          <p>De broeikasgasreductiedoelstellingen van Ontex zijn goedgekeurd door het Science Based Targets initiative (SBTi) en hanteren 2020 als referentiejaar. Er worden reducties voorzien tegen 2030 voor zowel scope 1, 2 en 3.</p>
-          </blockquote>
-          <p>Ontex heeft een analyse uitgevoerd om te achterhalen waar de emissies ontstaan. Hieruit bleek dat meer dan 95% van de totale CO₂-voetafdruk binnen Scope 3 valt. Grondstoffen vormen de grootste bron van uitstoot, en zijn daarom het belangrijkste focusgebied binnen de klimaatstrategie. Om de emissiereductie vorm te geven worden een aantal concrete acties en verwezenlijkingen naar voor geschoven.</p>
-          <p>Daarnaast legt Ontex een aantal verwezenlijkingen voor op het vlak van Co² reductie sinds 2020 en werkt zij nog verder aan verdere maatregelen om deze reductie nog te verminderen.</p>
-          <p>Wat het transport betreft stelt Ontex dat transport goed is voor ongeveer 9% van de totale CO₂-voetafdruk. Initiatieven naar optimalisatie inzake duurzaamheid van het transport omvatten:</p>
-          <ul>
-          <li><p>Laadoptimalisatie en beperking van lege ritten</p></li>
-          <li><p>Verkorten van afstanden tussen leveranciers, fabrieken en klanten</p></li>
-          <li><p>Meer rechtstreekse leveringen van leverancier naar fabriek of klant</p></li>
-          <li><p>Samenwerking met transporteurs rond energie-efficiënte vrachtwagens</p></li>
-          <li><p>Verkenning van multimodaal transport en alternatieve brandstoffen</p></li>
-          </ul>
-          <p>Wat de verpakkingen en end-of-life-oplossingen betreft, worden volgende acties door Ontex genomen:</p>
-          <ul>
-          <li><p>Engagement voor 100% recycleerbare verpakkingen tegen 2030</p></li>
-          <li><p>Deelname aan pilootprojecten voor recycling en compostering</p></li>
-          <li><p>Partnerschap met Woosh, een Belgische start-up voor luierrecycling, met piloten in België en schaalambitie in Europa</p></li>
-          <li><p>Ontwerpoptimalisatie van producten en verpakkingen ter ondersteuning van toekomstige circulaire systemen</p></li>
-          </ul>
-          <p>Innovatie streeft Ontex na via vijf R&amp;D-centra en intensieve samenwerking met klanten en leveranciers.</p>
-          <p>Voorbeelden die hieromtrent worden gegeven zijn:</p>
-          <ul>
-          <li><p>Laag-carbon absorberingstechnologieën (bioSAP)</p></li>
-          <li><p>Mechanisch post-consumer gerecycleerde (mPCR) verpakkingen</p></li>
-          <li><p>Platformstandaardisatie om complexiteit, afval en emissies te verminderen</p></li>
-          <li><p>Hybride en herbruikbare productconcepten</p></li>
-          </ul>
-          <blockquote>
-          <p>Wat externe certificering betreft legt Ontex het volgende voor:</p>
-          </blockquote>
-          <ul>
-          <li><p>EcoVadis Gold-rating (81/100, top 3% wereldwijd)</p></li>
-          <li><p>ISO 14001 milieumanagement in alle Ontex plants</p></li>
-          <li><p>ISO 50001 energiemanagmenet in alle Europese Ontex plants</p></li>
-          <li><p>GOTS en REDcert² certificeringen</p></li>
-          </ul>
-          <blockquote>
-          <p>Samengevat gaat Ontex op onderbouwde wijze op zoek naar optimalisatie inzake CO² uitstoot en zet in op innovatie. Ze zet in op optimalisatie van transport al blijven de maatregelen hieromtrent algemeen geformuleerd. Reduceren van verpakkingsafval blijkt een uitdaging maar hiertoe worden ook enkele voorstellen geformuleerd al is dit luik minder uitgewerkt. Ontex kan naast enkele erkenningen ook relevante externe certificering voorleggen.</p>
-          <p>De offerte en de daarin verwerkte visie sluit goed tot zeer goed aan bij de punten die de opdrachtgever vooropstelt op vlak van duurzaamheid. De opdrachtgever heeft één of meerdere bemerkingen bij de voorgestelde ontwerpvisie, die evenwel niet substantieel zijn. Omwille van hiervan scoort de offerte van Ontex op dit criterium 75% ofwel 3,75 punten.</p>
-          </blockquote>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>Algemene ecologische bedrijfsvisie en strategie</td>
-          <td>50% - 2,5 punten</td>
-          <td>100% - 5 punten</td>
-          </tr>
-          <tr>
-          <td><u>hoe hij deze concreet implementeert op het vlak van o.a. energie, leveringen/transport, beheer verpakkingsafval etc</u></td>
-          <td>75% - 3,75 punten</td>
-          <td>75% - 3,75 punten</td>
-          </tr>
-          <tr>
-          <td><strong>Punten</strong></td>
-          <td><strong>6,25</strong></td>
-          <td><strong>8,75</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p class="verslag-h">5. <strong><u>Gunningsvoorstel</u></strong></p>
-          <p><em><strong>5.1. Perceel 1: incontinentiemateriaal voornamelijk ééndelig met kleefluier en tweedelig</strong></em></p>
-          <p><strong>Samenvatting scores gunningscriteria perceel 1:</strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Gunningscriterium</strong></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          <th><strong>Totaal</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>1</td>
-          <td>Prijs</td>
-          <td>50</td>
-          <td>46,91</td>
-          <td>50</td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>Dropkost</td>
-          <td>7</td>
-          <td>10</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>Dienstverlening</td>
-          <td>33</td>
-          <td>36</td>
-          <td>40</td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>Duurzaamheid</td>
-          <td>6,25</td>
-          <td>8,75</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td></td>
-          <td><strong>TOTAAL</strong></td>
-          <td><strong>96,25</strong></td>
-          <td><strong>101,66</strong></td>
-          <td><strong>110</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p>De raamovereenkomst voor het leveren van incontinentiemateriaal met referte ‘AZO 2026 – Incontinentiemateriaal’ wordt, voor wat betreft perceel 1, overeenkomstig de bepalingen van het bestek AZO 2026_Incontinentiemateriaal_Bestek_V3 voor een periode van één jaar (+ mogelijks viermaal verlengbaar met een periode van één jaar) gegund aan de economisch meest voordelige regelmatige offerte, ingediend door <strong>Ontex bv, Genthof 5, 9255 Buggenhout,</strong> tegen de eenheidsprijzen, vermeld in de offerte de dato 22 mei 2026 en met een maximale bestelhoeveelheid van 12.500.000 euro excl. BTW<sup class="fn-ref">2</sup>.</p>
-          <p>De raamopdracht moet uitgevoerd worden overeenkomstig de toepasselijke bepalingen van het bestek AZO 2026_Incontinentiemateriaal_Bestek_V3.</p>
-          <p>De ingangsdatum van de uitvoering wordt bepaald in de brief tot sluiting van de opdracht.</p>
-          <p><em><strong>5.2. Perceel 2: incontinentiemateriaal voornamelijk ééndelig met comfortgordel</strong></em></p>
-          <p><strong>Samenvatting scores gunningscriteria perceel 2:</strong></p>
-          <table class="doc-table">
-
-          <thead>
-          <tr>
-          <th></th>
-          <th><strong>Gunningscriterium</strong></th>
-          <th><strong>Essity</strong></th>
-          <th><strong>Ontex</strong></th>
-          <th><strong>Totaal</strong></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-          <td>1</td>
-          <td>Prijs</td>
-          <td>50</td>
-          <td>46,28</td>
-          <td>50</td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>Dropkost</td>
-          <td>7</td>
-          <td>10</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>Dienstverlening</td>
-          <td>33</td>
-          <td>36</td>
-          <td>40</td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>Duurzaamheid</td>
-          <td>6,25</td>
-          <td>8,75</td>
-          <td>10</td>
-          </tr>
-          <tr>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td></td>
-          </tr>
-          <tr>
-          <td></td>
-          <td><strong>TOTAAL</strong></td>
-          <td><strong>96,25</strong></td>
-          <td><strong>101,03</strong></td>
-          <td><strong>110</strong></td>
-          </tr>
-          </tbody>
-          </table>
-          <p>Inschrijvers mogen op beide percelen inschrijven maar er zal slechts 1 perceel per onderneming</p>
-          <p>kunnen gegund worden. Eerst zal perceel 1 beoordeeld worden. De inschrijver aan wie perceel 1</p>
-          <p>wordt toegekend zal niet meer in aanmerking genomen worden voor perceel 2.</p>
-          <p>Aangezien perceel 1 reeds aan de Ontex werd toegekend, kwam zij aldus niet meer in aanmerking voor perceel 2.</p>
-          <p>Hierdoor zal de raamovereenkomst voor het leveren van incontinentiemateriaal met referte ‘AZO 2026 – Incontinentiemateriaal’, voor wat betreft perceel 2, overeenkomstig de bepalingen van het bestek AZO 2026_Incontinentiemateriaal_Bestek_V3 voor een periode van één jaar (mogelijks viermaal verlengbaar met een periode van één jaar) worden gegund aan de economisch meest voordelige regelmatige offerte, ingediend door Essity Belgium nv, Berkenlaan 8/B-3, 1831 Diegem<strong>,</strong> tegen de eenheidsprijzen, vermeld in de offerte de dato 21 mei 2026 en met een maximale bestelhoeveelheid van 12.500.000 euro excl. BTW<sup class="fn-ref">3</sup>.</p>
-          <p>De raamopdracht moet uitgevoerd worden overeenkomstig de toepasselijke bepalingen van het bestek AZO 2026_Incontinentiemateriaal_Bestek_V3.</p>
-          <p>De ingangsdatum van de uitvoering wordt bepaald in de brief tot sluiting van de opdracht.</p>
-          <p>Frederique Vandenbussche,<br/>
-          Bestuurder VZW Samenaankoop AZO.</p>
-          <p>Ruddervoorde, 28 mei 2026</p>
-          <aside class="doc-footnotes">
-
-          <ol class="fn-list">
-          <li><p>De offertes van alle Inschrijvers zullen wel beoordeeld worden voor alle percelen op vlak van regelma;gheid.</p>
-          <p>Indien de opdracht voor een perceel zou verbroken worden met een bepaalde leverancier, dan kan de opdracht</p>
-          <p>worden toegewezen aan de tweede in de rangschikking voor dat perceel. Dit houdt een uitzondering in op het</p>
-          <p>principe dat er maar 1 perceel kan toegekend worden per leverancier. Op deze uitzondering zal enkel een</p>
-          <p>beroep gedaan worden ingeval er structurele problemen zijn bij een leverancier. Voor meer uitleg zie ook</p>
-          <p>‘middelen van optreden’ – pagina 18 bijzonder bestek.</p></li>
-          <li><p>Behoudens de toepassing van artikel 38 e.v. KB uitvoering</p></li>
-          <li><p>Behoudens de toepassing van artikel 38 e.v. KB uitvoering</p></li>
-          </ol>
-          </aside>
-
+          <p>${fill(d.contact_naam, CONTACT_DEFAULT.contact_naam)},</p>
+          <p>${fill(d.contact_functie, CONTACT_DEFAULT.contact_functie)}.</p>
         </div>
         ${docFooter()}
       `;
     }
+
   },
 
   selectieleidraad: {
@@ -3103,14 +1618,14 @@ return {
         {key:"uitsluiting_bevinding", label:"Bevinding (staat standaard al correct, enkel aanpassen indien nodig)", type:"textarea", default:"Geen uitsluitingsgronden vastgesteld. Geen enkele inschrijver dient te worden uitgesloten."},
       ]},
       {name:"Selectiecriteria — Economische en financiële draagkracht", fields:[
-        {key:"selectie_eco", label:"Economische en financiële draagkracht", type:"table", addLabel:"+ Criterium toevoegen (max. 6)", columns:[
+        {key:"selectie_eco", label:"Economische en financiële draagkracht", type:"table", defaultRows:6, addLabel:"+ Criterium toevoegen", columns:[
           {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. De omzet bij minimaal 5 klanten gedurende de afgelopen 3 jaar"},
           {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Minimaal 95.000 euro per jaar bij één klant, gestaafd door certificaat."},
         ]},
         {key:"selectie_eco_besluit", label:"Besluit", type:"textarea", placeholder:"bv. Distrac, Haelvoet en Moments dienden bovenvermelde getekende certificaten in en voldoen aan bovenstaande criteria, en worden weerhouden in verdere evaluatie."},
       ]},
       {name:"Selectiecriteria — Technische en beroepsbekwaamheid", fields:[
-        {key:"selectie_tech", label:"Technische en beroepsbekwaamheid", type:"table", addLabel:"+ Criterium toevoegen (max. 6)", columns:[
+        {key:"selectie_tech", label:"Technische en beroepsbekwaamheid", type:"table", defaultRows:6, addLabel:"+ Criterium toevoegen", columns:[
           {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. De nodige certificaten mbt kwaliteit"},
           {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Een geldig ISO 9001 en ISO 13485 certificaat"},
         ]},
@@ -3120,7 +1635,7 @@ return {
         {key:"regelmatigheid_extra", label:"Bijkomende vaststelling (bv. over volmacht/ondertekening) — optioneel", type:"textarea", placeholder:"bv. Bij alle inschrijvers zijn de offertes en inventaris ondertekend door de volmachthouder met geldige volmacht van de zaakvoerder."},
       ]},
       {name:"Gunningscriteria per perceel", fields:[
-        {key:"gunningscriteria", label:"Gunningscriteria", type:"table", addLabel:"+ Gunningscriterium toevoegen (max. 6 per perceel)", columns:[
+        {key:"gunningscriteria", label:"Gunningscriteria", type:"table", defaultRows:6, addLabel:"+ Gunningscriterium toevoegen", columns:[
           {key:"perceel", label:"Perceel (exact zoals hierboven)", placeholder:"bv. Perceel 1: Zorgbedden met voornamelijk ziekenhuisbedden"},
           {key:"naam", label:"Criterium", placeholder:"bv. Prijs Aankoop via netto prijslijst"},
           {key:"gewicht", label:"Gewicht", placeholder:"bv. 30"},
@@ -4870,7 +3385,9 @@ function initPage(docId){
   // State init
   ENGINE_STATE.data = {};
   doc.sections.forEach(sec => sec.fields.forEach(f => {
-    ENGINE_STATE.data[f.key] = f.type === "table" ? [] : (f.default || "");
+    ENGINE_STATE.data[f.key] = f.type === "table"
+      ? (f.defaultRows ? Array.from({length:f.defaultRows}, () => Object.fromEntries(f.columns.map(c=>[c.key,""]))) : [])
+      : (f.default || "");
   }));
   ENGINE_STATE.zoom = 0.9;
   ENGINE_STATE.estimatedPages = 1;
