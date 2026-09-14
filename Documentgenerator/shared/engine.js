@@ -217,7 +217,7 @@ function docFooter(){
     <hr class="doc-accent-line doc-accent-line-bottom" color="#7db73f" size="2" width="100%">
     <table class="doc-footer" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
       <td class="df-icon" width="3%"><img src="${LOGO_ICON_EMBED}" alt="" width="15" height="9"></td>
-      <td class="df-address" align="left"><span class="fg">Vzw Samenaankoop AZO</span> — Torhoutsestraat 338, 8020 Ruddervoorde — info@samenaankoopazo.be</td>
+      <td class="df-address" align="left"><span class="fg">Vzw Samenaankoop AZO</span> — Torhoutsestraat 338, 8020 Oostkamp — info@samenaankoopazo.be</td>
     </tr></table>
   `;
 }
@@ -889,7 +889,7 @@ return {
           <p><strong>Opdrachtgevend bestuur:</strong></p>
           <p>Naam: Samenaankoop AZO VZW</p>
           <p>Adres: Torhoutsestraat 338</p>
-          <p>8020 Ruddervoorde</p>
+          <p>8020 Oostkamp</p>
 
           <p class="verslag-h">1. <strong>Algemene gegevens</strong></p>
           <table class="doc-table">
@@ -1038,7 +1038,7 @@ return {
           <table class="doc-table">
           <thead><tr><th>
             <p><strong>Aanbestedende overheid:</strong><br/>Samenaankoop AZO vzw<br/>Torhoutsestraat 338</p>
-            <p>8020 Ruddervoorde</p>
+            <p>8020 Oostkamp</p>
             <p><strong>Voorwerp van de opdracht:</strong><br/>${nl2br(d.voorwerp||"")||fill("","Voorwerp van de opdracht")}</p>
             <p><strong>Wijze van gunning:</strong><br/>${nl2br(d.gunningswijze||"")||fill("","Wijze van gunning")}</p>
           </th></tr></thead>
@@ -1115,7 +1115,6 @@ return {
       {name:"Projectcontactpersoon", fields:[
         {key:"project_contact_naam", label:"Naam", type:"text", placeholder:"bv. Mevrouw Charlotte Verschelden"},
         {key:"project_contact_email", label:"E-mail", type:"text", placeholder:"bv. charlotte@samenaankoopazo.be"},
-        {key:"ondernemingsnummer", label:"Ondernemingsnummer (O.N.)", type:"text", placeholder:"bv. O.N. 0627.619.593"},
       ]},
       {name:"Afwijkingen", fields:[
         {key:"afwijkingen", label:"Afwijkingen, aanvullingen en opmerkingen", type:"text", placeholder:"bv. Geen"},
@@ -1152,7 +1151,7 @@ return {
           <p><strong>Aanbestedende overheid en ontwerper</strong></p>
           <p><strong><u>Samenaankoop AZO VZW</u></strong></p>
           <p><strong><u>Torhoutsestraat 338 te 8020 Oostkamp</u></strong></p>
-          <p><strong><u>${fill(d.ondernemingsnummer, "O.N. 0627.619.593")}</u></strong></p>
+          <p><strong><u>O.N. 0627.619.593</u></strong></p>
           <p><strong><u>Inhoudsopgave</u></strong></p>
           <p><a href="#beschrijving-van-de-opdracht">1. Beschrijving van de opdracht <span>4</span></a></p>
           <p><a href="#plaatsingsprocedure">2. Plaatsingsprocedure <span>5</span></a></p>
@@ -1462,7 +1461,7 @@ return {
           <p>De gepubliceerde antwoorden in verband met deze opdracht maken integraal deel uit van de contractuele voorwaarden. De inschrijver wordt geacht hiervan kennis te hebben genomen en er rekening mee te hebben gehouden bij het opmaken van zijn aanvraag tot deelneming/offerte.</p>
           <p class="bijlage-h">BIJLAGE A: FORMULIER VOOR AANVRAAG TOT DEELNEMING</p>
           <p>AANVRAAG TOT DEELNEMING VOOR DE OPDRACHT MET ALS VOORWERP</p>
-          <p>“LEVEREN VAN VERS VLEES EN CHARCUTERIE”</p>
+          <p>“${fill(d.opdracht_titel, "LEVERING VAN VERS VLEES EN CHARCUTERIE")}”</p>
           <p>Mededingingsprocedure met onderhandeling</p>
           <p><em>Belangrijk: dit formulier dient volledig te worden ingevuld.</em></p>
           <p><u>Natuurlijke persoon</u></p>
@@ -1740,7 +1739,7 @@ return {
           <table class="doc-table">
           <thead><tr><th>
             <p><strong>Aanbestedende overheid:</strong><br/>Samenaankoop AZO vzw<br/>Torhoutsestraat 338</p>
-            <p>8020 Ruddervoorde</p>
+            <p>8020 Oostkamp</p>
             <p><strong>Voorwerp van de opdracht:</strong><br/>${fill(d.voorwerp,"Voorwerp van de opdracht")}</p>
             <p><strong>Wijze van gunning:</strong><br/>${nl2br(d.wijze_gunning||"")||fill("","Wijze van gunning")}</p>
           </th></tr></thead>
@@ -1840,8 +1839,8 @@ return {
           <p><strong><u>Torhoutsestraat 338, 8020 Oostkamp</u></strong></p>
 <p><strong><u>Ontwerper</u></strong></p>
 <p>Naam: Samenaankoop AZO VZW</p>
-<p>Adres: Torhoutsestraat 338, 8020 Oostkamp Contactpersoon: mevrouw Charlotte Verschelden</p>
-<p>E-mail:</p>
+<p>Adres: Torhoutsestraat 338 te 8020 Oostkamp<br/>Contactpersoon: ${fill(d.project_contact_naam, "Mevrouw Charlotte Verschelden")}</p>
+<p>E-mail: ${fill(d.project_contact_email, "charlotte@samenaankoopazo.be")}</p>
 <p><strong><u>Detail opdrachtdocumenten</u></strong></p>
 <ul><li><p>Selectieleidraad</p></li><li><p>Bijzonder bestek</p></li><li><p>Lijst van de leden en potentiële deelnemers </p></li></ul>
 <p><strong><u>Toepasselijke reglementering</u></strong></p>
@@ -3137,14 +3136,39 @@ const STORAGE_OK = (() => {
   catch(e){ return false; }
 })();
 
+// Deze velden worden bewust NOOIT bewaard of hersteld via het conceptmechanisme.
+// Selectie-/gunningscriteria zijn elke keer specifiek voor het lopende dossier —
+// een hersteld concept van een ander dossier zorgt hier net voor fouten, omdat
+// het overschrijven van al-ingevulde tekst foutgevoeliger is dan een blanco veld
+// invullen. Deze velden starten dus altijd leeg, ook na "Concept herstellen".
+const NEVER_PERSIST_KEYS = new Set([
+  "criteria", "criteria_economisch", "criteria_technisch",
+  "selectie_eco", "selectie_tech", "gunningscriteria",
+]);
+function stripNeverPersist(data){
+  const copy = {...data};
+  // Leeg maken (niet verwijderen!) — het formulier verwacht altijd een array
+  // voor tabelvelden, dus een ontbrekende sleutel zou een fout veroorzaken.
+  // Altijd expliciet op [] zetten, ook als de sleutel nog niet bestond.
+  NEVER_PERSIST_KEYS.forEach(k => { copy[k] = []; });
+  return copy;
+}
+
 function saveDraft(docId, data){
   if(!STORAGE_OK) return;
-  try{ localStorage.setItem(STORAGE_PREFIX+"draft_"+docId, JSON.stringify({data, savedAt: Date.now()})); }
+  try{ localStorage.setItem(STORAGE_PREFIX+"draft_"+docId, JSON.stringify({data: stripNeverPersist(data), savedAt: Date.now()})); }
   catch(e){ /* storage vol of geblokkeerd — concept wordt dan gewoon niet bewaard */ }
 }
 function loadDraft(docId){
   if(!STORAGE_OK) return null;
-  try{ const raw = localStorage.getItem(STORAGE_PREFIX+"draft_"+docId); return raw ? JSON.parse(raw) : null; }
+  try{
+    const raw = localStorage.getItem(STORAGE_PREFIX+"draft_"+docId);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Defensief ook hier filteren, voor concepten die vóór deze fix al bewaard waren.
+    if(parsed && parsed.data) parsed.data = stripNeverPersist(parsed.data);
+    return parsed;
+  }
   catch(e){ return null; }
 }
 function clearDraft(docId){
@@ -3760,7 +3784,7 @@ function buildDocxFooter(){
         verticalAlign: docx.VerticalAlign.CENTER,
         children: [ new docx.Paragraph({ children: [
           new docx.TextRun({ text: "Vzw Samenaankoop AZO", bold:true, color: DOCX_COLOR.greenDark, size:14, font:"Calibri" }),
-          new docx.TextRun({ text: " — Torhoutsestraat 338, 8020 Ruddervoorde — info@samenaankoopazo.be", size:14, color: DOCX_COLOR.muted, font:"Calibri" }),
+          new docx.TextRun({ text: " — Torhoutsestraat 338, 8020 Oostkamp — info@samenaankoopazo.be", size:14, color: DOCX_COLOR.muted, font:"Calibri" }),
         ]}) ],
       }),
       new docx.TableCell({
@@ -3901,7 +3925,7 @@ function buildSelectieleidraadCoverBlocks(coverHtml, d){
       centered("Aanbestedende overheid en ontwerper", { bold: true, size: 18, color: BANNER_GREEN, after: 40 }),
       centered("Samenaankoop AZO VZW", { bold: true, size: 20, color: DARK_GREEN }),
       centered("Torhoutsestraat 338 te 8020 Oostkamp", { bold: true, size: 18, color: DARK_GREEN, after: 40 }),
-      centered(fillPlain(d.ondernemingsnummer, "O.N. 0627.619.593"), { bold: true, size: 16, color: DARK_GREEN }),
+      centered("O.N. 0627.619.593", { bold: true, size: 16, color: DARK_GREEN }),
     ], { fill: "FFFFFF", borderColor: MID_GREEN, borderSize: 6 }),
     new docx.Paragraph({ pageBreakBefore: true, spacing: { before: 0, after: 0 }, children: [ new docx.TextRun("") ] }),
   ];
