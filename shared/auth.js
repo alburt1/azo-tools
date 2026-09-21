@@ -83,7 +83,7 @@ document.addEventListener("click", (e) => {
 // hebben we altijd, want elke pagina zit al achter requireAuth()); faalt
 // stil bij problemen zodat het downloaden van het document zelf nooit
 // geblokkeerd wordt door een logging-fout.
-async function logDocumentToHistory({docType, docLabel, projectRef, opdrachtTitel}){
+async function logDocumentToHistory({docType, docLabel, projectRef, opdrachtTitel, formData, fileName}){
   try{
     const { data: { session } } = await supabaseClient.auth.getSession();
     if(!session) return;
@@ -94,6 +94,8 @@ async function logDocumentToHistory({docType, docLabel, projectRef, opdrachtTite
       doc_label: docLabel || docType,
       project_ref: projectRef || null,
       opdracht_titel: opdrachtTitel || null,
+      form_data: formData || null,
+      file_name: fileName || null,
     });
   } catch(e){
     // stil falen — loggen mag de eigenlijke download nooit blokkeren

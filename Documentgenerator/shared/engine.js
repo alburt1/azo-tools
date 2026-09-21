@@ -1642,7 +1642,11 @@ return {
           {key:"naam", label:"Criterium (of subcriterium/element)", placeholder:"bv. KWALITEIT — Dimensionering op basis van kwartuurdata"},
           {key:"gewicht", label:"Max. punten", placeholder:"bv. 45"},
           {key:"toelichting", label:"Toelichting, drempel en evaluatiemethode", wide:true, placeholder:"bv. Minstens 22,5 punten vereist. Beoordeling op basis van ..."},
-          {key:"scores", label:"Scores per inschrijver", wide:true, placeholder:"bv. Argona - Eco Technics: 38 punten — Extra-Power: 30 punten — Solara: 25 punten — Insaver: 33 punten"},
+        ]},
+        {key:"criteria_scores", label:"Score per inschrijver, per criterium hierboven", type:"table", addLabel:"+ Score toevoegen", columns:[
+          {key:"criterium", label:"Criterium (exact zoals hierboven)", placeholder:"bv. KWALITEIT — Dimensionering op basis van kwartuurdata"},
+          {key:"inschrijver", label:"Inschrijver (exact zoals bij Inschrijvers)", placeholder:"bv. Argona - Eco Technics"},
+          {key:"score", label:"Score", placeholder:"bv. 38"},
         ]},
       ]},
       {name:"Totaal overzicht punten gunningscriteria en rangschikking", fields:[
@@ -1711,18 +1715,35 @@ return {
         return `<li><p>${esc(p.titel||"Perceel")}: ${n > 0 ? `<strong>${n}</strong> offerte${n===1?"":"s"} tijdig ontvangen` : fill("","aantal offertes tijdig ontvangen")}</p></li>`;
       }).join("")}</ul>` : "";
 
+      const criteriaScores = d.criteria_scores || [];
+
       // ---- Perceel-blokken voor gunningscriteria en samenvatting ----
       function gunningBlokVoorPerceel(titel){
         const gcRows = heeftPercelen ? rowsFor(gunningscriteria, titel) : gunningscriteria;
         const samRows = heeftPercelen ? rowsFor(samenvatting, titel) : samenvatting;
-        const gcHtml = gcRows.length ? gcRows.map(c => `
+        const perceelInschrijvers = heeftPercelen ? rowsFor(inschrijvers, titel) : inschrijvers;
+
+        const gcHtml = gcRows.length ? gcRows.map(c => {
+          // Scoretabel opbouwen: één kolom per inschrijver van dit perceel, met de
+          // bijhorende score erin (of leeg als er nog niets is ingevuld voor die combinatie).
+          const scoreCellsHtml = perceelInschrijvers.length ? perceelInschrijvers.map(ins => {
+            const match = criteriaScores.find(s =>
+              (s.criterium||"").trim().toLowerCase() === (c.naam||"").trim().toLowerCase() &&
+              (s.inschrijver||"").trim().toLowerCase() === (ins.naam||"").trim().toLowerCase()
+            );
+            return `<td><strong>${match ? esc(match.score||"") : fill("","score")}</strong></td>`;
+          }).join("") : `<td>${fill("","Nog geen inschrijvers toegevoegd")}</td>`;
+          const headerCellsHtml = perceelInschrijvers.length ? perceelInschrijvers.map(ins => `<th>${fill(ins.naam,"Inschrijver")}</th>`).join("") : "<th></th>";
+          return `
           <table class="doc-table">
           <thead><tr><th><strong>${fill(c.naam,"Criterium")}</strong></th><th><strong>${fill(c.gewicht,"Max. punten")}</strong></th></tr></thead>
-          <tbody>
-            <tr><td colspan="2">${nl2br(c.toelichting||"")||fill("","Toelichting, drempel en evaluatiemethode")}</td></tr>
-            <tr><td colspan="2"><strong>${nl2br(c.scores||"")||fill("","Scores per inschrijver")}</strong></td></tr>
-          </tbody>
-          </table>`).join("") : `<p>${fill("", "Nog geen gunningscriteria toegevoegd.")}</p>`;
+          <tbody><tr><td colspan="2">${nl2br(c.toelichting||"")||fill("","Toelichting, drempel en evaluatiemethode")}</td></tr></tbody>
+          </table>
+          <table class="doc-table">
+          <thead><tr>${headerCellsHtml}</tr></thead>
+          <tbody><tr>${scoreCellsHtml}</tr></tbody>
+          </table>`;
+        }).join("") : `<p>${fill("", "Nog geen gunningscriteria toegevoegd.")}</p>`;
         const samHtml = samRows.length ? `
           <table class="doc-table">
           <thead><tr><th>Inschrijver</th><th>Totaalscore / rangschikking</th></tr></thead>
@@ -1907,6 +1928,8 @@ return {
         {key:"opdracht_type", label:"Type opdracht", type:"text", placeholder:"bv. LEVERINGEN / WERKEN / DIENSTEN"},
         {key:"opdracht_titel", label:"Voorwerp van de opdracht", type:"text", placeholder:"bv. Levering van onderhoudsproducten en -materialen"},
         {key:"procedure", label:"Plaatsingsprocedure", type:"text", placeholder:"bv. MEDEDINGINGSPROCEDURE MET ONDERHANDELING"},
+        {key:"begindatum_leveringen", label:"Voorziene begindatum van de leveringen", type:"text", placeholder:"bv. 01 oktober 2026"},
+        {key:"einddatum_leveringen", label:"Voorziene einddatum van de leveringen", type:"text", placeholder:"bv. 30 september 2027"},
       ]},
       {name:"Projectcontactpersoon", fields:[
         {key:"project_contact_naam", label:"Naam", type:"text", placeholder:"bv. mevrouw Charlotte Verschelden"},
@@ -2121,8 +2144,8 @@ return {
 <p class="verslag-h">Looptijd en leveringstermijn</p>
 <p><strong>Totale</strong><strong> maximale</strong><strong> </strong><strong>looptijd</strong><strong> </strong><strong>van</strong><strong> </strong><strong>deze</strong><strong> </strong><strong>raamovereenkomst: </strong></p>
 <p>48 maanden (12 maanden + optie 3 x 12 maanden).</p>
-<p>Voorziene begindatum van de leveringen: 01 oktober 2026.</p>
-<p>Voorziene einddatum van de leveringen: 30 september 2027 (tenzij verlenging).</p>
+<p>Voorziene begindatum van de leveringen: ${fill(d.begindatum_leveringen, "01 oktober 2026")}.</p>
+<p>Voorziene einddatum van de leveringen: ${fill(d.einddatum_leveringen, "30 september 2027")} (tenzij verlenging).</p>
 <p>Deze verlenging verloopt stilzwijgend, behoudens een andersluidend aangetekende zending van de aanbestedende overheid uiterlijk 1 maand vóór het verstrijken van de looptijd van de opdracht.</p>
 <p>De opdracht gaat in op de datum zoals vermeld zal worden in de sluitingsbrief.</p>
 <p>De looptijd voor de individuele leden gaat in op het ogenblik van de afroep van het individueel AZO-lid.</p>
@@ -2869,8 +2892,8 @@ return {
 <p>MEDEDINGINGSPROCEDURE MET ONDERHANDELING</p>
 <p>Opdrachtgevend bestuur</p>
 <p>Samenaankoop AZO VZW</p>
-<p>Ontwerper Samenaankoop AZO VZW Torhoutsestraat 338, 8020 0ostkamp</p>
-<p>Ontwerper Naam: Samenaankoop AZO VZW Adres: Torhoutsestraat 338, 8020 Oostkamp Contactpersoon: Charlotte Verschelden E-mail: charlotte@samenaankoopazo.be</p>
+<p>Ontwerper Samenaankoop AZO VZW Torhoutsestraat 338, 8020 Oostkamp</p>
+<p>Ontwerper Naam: Samenaankoop AZO VZW Adres: Torhoutsestraat 338, 8020 Oostkamp Contactpersoon: ${fill(d.project_contact_naam, "Charlotte Verschelden")} E-mail: ${fill(d.project_contact_email, "charlotte@samenaankoopazo.be")}</p>
 <p>Opdrachtdocumenten</p>
 <p>1.   Bestek met administratieve en technische bepalingen 2.   Plan casus 1 3.   Plan casus 2 4.   Meetstaten/inventaris casussen met prijslijst 5.   Evaluatieformulier ‘must haves’ en ‘nice to have’ 6.   Lijst leden AZO + potentiële deelnemers</p>
 <p>Toepasselijke reglementering 1. Wet van 17 juni 2016 inzake overheidsopdrachten en latere wijzigingen. 2. Koninklijk besluit van 18 april 2017 betreffende plaatsing overheidsopdrachten klassieke sectoren, en latere wijzigingen. 3. Koninklijk besluit van 14 januari 2013 tot bepaling van de algemene uitvoeringsregels van de overheidsopdrachten, en latere wijzigingen. 4. Wet van 17 juni 2013 betreffende de motivering, de informatie en de rechtsmiddelen inzake overheidsopdrachten, bepaalde opdrachten voor werken, leveringen en diensten en concessies, en latere wijzigingen. 5. Het Algemeen Reglement voor de Arbeidsbescherming (ARAB), Welzijnswet en Codex over het welzijn op het werk. 6. Wet van 11 februari 2013 tot vaststelling van sancties en maatregelen voor werkgevers van illegaal verblijvende onderdanen van derde landen. 7. Koninklijk besluit van 13 juli 2014 betreffende de energie-efficiëntie-eisen in het kader van bepaalde overheidsopdrachten betreffende de verwerving van producten, diensten en gebouwen. 8. De verordening (EU) 2016/679 van het Europees Parlement en de Raad van 27 april 2016 betreffende de bescherming van natuurlijke personen in verband met de verwerking van persoonsgegevens en betreffende het vrije verkeer van die gegevens en tot intrekking van Richtlijn 95/46/EG.</p>
@@ -3537,6 +3560,43 @@ function initPage(docId){
   }
   checkProjectMatch();
 
+  // Fase 4-uitbreiding: geopend vanuit de documentenhistoriek (?open=<id>)?
+  // Dan de bewaarde data van dat specifieke document laden i.p.v. een leeg
+  // of hersteld-concept-formulier — zo kan je exact terugzien wat er ooit
+  // gegenereerd werd, en het zo nodig opnieuw downloaden.
+  const openId = new URLSearchParams(window.location.search).get("open");
+  if(openId){
+    (async () => {
+      try{
+        const { data, error } = await supabaseClient
+          .from('document_history')
+          .select('form_data, doc_label, created_at')
+          .eq('id', openId)
+          .single();
+        if(error || !data || !data.form_data) return;
+        if(banner) banner.hidden = true;
+        // Robuust samenvoegen: eerst een lege basis opbouwen met alle huidige
+        // velden (zelfde manier als bij het openen van een blanco formulier),
+        // en de bewaarde data daar overheen leggen. Zo blijft dit ook werken
+        // als een oud bewaard document een veld mist dat later is toegevoegd
+        // aan dit documenttype — in plaats van stil te crashen.
+        const emptyBase = {};
+        doc.sections.forEach(sec => sec.fields.forEach(f => {
+          emptyBase[f.key] = f.type === "table"
+            ? (f.defaultRows ? Array.from({length:f.defaultRows}, () => Object.fromEntries(f.columns.map(c=>[c.key,""]))) : [])
+            : (f.default || "");
+        }));
+        ENGINE_STATE.data = {...emptyBase, ...data.form_data};
+        renderForm(); renderPreview(); updateCompleteness(); updateWarnings();
+        const openBanner = document.getElementById("open-history-banner");
+        if(openBanner){
+          openBanner.hidden = false;
+          openBanner.textContent = `📂 Je bekijkt een eerder gegenereerd document (${data.doc_label}, ${relativeTime(new Date(data.created_at).getTime())}). Wijzigingen die je hier maakt overschrijven dit oude exemplaar niet — download opnieuw om een nieuwe versie te bewaren.`;
+        }
+      } catch(e){ /* stil falen — leeg formulier blijft gewoon staan */ }
+    })();
+  }
+
   document.getElementById("btn-download").addEventListener("click", exportWord);
   document.getElementById("btn-reset").addEventListener("click", () => {
     clearDraft(docId);
@@ -4171,6 +4231,8 @@ function exportWord(){
       docLabel: doc.title,
       projectRef: ENGINE_STATE.data.project_ref || "",
       opdrachtTitel: ENGINE_STATE.data.opdracht_titel || ENGINE_STATE.data.opdracht_titel_klein || "",
+      formData: ENGINE_STATE.data,
+      fileName: pageInfo ? pageInfo.file : "",
     });
 
     // Projectgegevens bijwerken: op de selectiefase leggen we bedrijfsnaam/adres van elke
