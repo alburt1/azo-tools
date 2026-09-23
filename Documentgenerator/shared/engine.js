@@ -167,6 +167,7 @@ const PAGES = [
   {id:"verslag_gunning_openbaar", file:"verslag-gunning-openbaar.html",    group:"Verslagen",               phase:"verslag"},
   {id:"selectieleidraad",         file:"selectieleidraad.html",            group:"Verslagen",               phase:"verslag"},
   {id:"bestek_cascade",           file:"bestek-cascade.html",              group:"Tweede fase",              phase:"tweede"},
+  {id:"bestek_openbare_procedure", file:"bestek-openbare-procedure.html",  group:"Tweede fase",              phase:"tweede"},
   {id:"bestek_cascade_percelen",  file:"bestek-cascade-percelen.html",     group:"Tweede fase",              phase:"tweede"},
   {id:"bestek_minicompetitie",    file:"bestek-minicompetitie.html",       group:"Tweede fase",              phase:"tweede"},
 ];
@@ -1910,6 +1911,523 @@ return {
 
           <p>${fill(d.contact_naam, CONTACT_DEFAULT.contact_naam)},</p>
           <p>${fill(d.contact_functie, CONTACT_DEFAULT.contact_functie)}, ${d.datum_ondertekening ? formatDate(d.datum_ondertekening) : fill("","datum")}.</p>
+        </div>
+        ${docFooter()}
+      `;
+    }
+  },
+
+  bestek_openbare_procedure: {
+    group:"Tweede fase", phase:"tweede", nativeHeadings:true,
+    title:"Bestek — Openbare Procedure",
+    sub:"Volledig bestek voor een raamovereenkomst via openbare procedure (artikel 36 Wet Overheidsopdrachten) — geen onderhandelingsfase, rechtstreekse beoordeling van de ingediende offertes.",
+    sections:[
+      {name:"Project", fields:[
+        {key:"project_ref", label:"Projectreferentie", type:"text", placeholder:"bv. AZO 2026 — energieV2", hint:"Zelfde referentie gebruiken bij alle documenten van dit dossier koppelt automatisch bedrijfsgegevens door."},
+      ]},
+      {name:"Opdracht", fields:[
+        {key:"opdracht_type", label:"Soort opdracht", type:"text", default:"leveringen", placeholder:"bv. leveringen, diensten, werken"},
+        {key:"voorwerp", label:"Voorwerp van de opdracht", type:"text", placeholder:"bv. Levering van 100% groene elektriciteit, injectie van elektriciteit en levering van aardgas"},
+        {key:"looptijd_maanden", label:"Maximale looptijd (maanden)", type:"text", placeholder:"bv. 48"},
+        {key:"begindatum_leveringen", label:"Voorziene begindatum van de leveringen", type:"text", placeholder:"bv. 01 januari 2027"},
+        {key:"einddatum_leveringen", label:"Voorziene einddatum van de leveringen", type:"text", placeholder:"bv. 31 december 2030"},
+      ]},
+      {name:"Percelen (optioneel)", fields:[
+        {key:"percelen", label:"Percelen — enkel invullen als deze opdracht in percelen is opgesplitst", type:"table", addLabel:"+ Perceel toevoegen", columns:[
+          {key:"titel", label:"Titel perceel", placeholder:"bv. Perceel 1: Leveren van 100% groene elektriciteit"},
+          {key:"omschrijving", label:"Korte omschrijving en geraamde waarde", wide:true, placeholder:"bv. Geraamde maximale waarde over de volledige looptijd: 6.500.000 euro excl. btw"},
+        ]},
+      ]},
+      {name:"Definities en technische specificaties", fields:[
+        {key:"definities_tekst", label:"Definities, technische specificaties en bijzondere bepalingen eigen aan dit dossier", type:"textarea", placeholder:"Plak of typ hier alle dossier-specifieke definities en technische specificaties (bv. volumes, kwaliteitsvereisten, meetgegevens, ...). Dit verschilt sterk per type opdracht en wordt daarom niet vooraf ingevuld."},
+      ]},
+      {name:"Indienen van de offerte", fields:[
+        {key:"datum_limiet", label:"Limietdatum en -uur voor indienen offertes", type:"text", placeholder:"bv. 28 oktober 2026 om 11:00 uur"},
+      ]},
+      {name:"Selectiecriteria — Geschiktheid beroepsactiviteit", fields:[
+        {key:"selectie_beroep", label:"Geschiktheid om de beroepsactiviteit uit te oefenen", type:"table", defaultRows:3, addLabel:"+ Criterium toevoegen", columns:[
+          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. Bewijs geschiktheid om de beroepsactiviteit uit te oefenen"},
+          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. De Inschrijver beschikt op het moment van indiening over een geldige leveringsvergunning."},
+        ]},
+      ]},
+      {name:"Selectiecriteria — Economische en financiële draagkracht", fields:[
+        {key:"selectie_eco", label:"Economische en financiële draagkracht", type:"table", defaultRows:3, addLabel:"+ Criterium toevoegen", columns:[
+          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. Een verklaring betreffende de totale omzet van de onderneming over de laatste 3 gepubliceerde boekjaren."},
+          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. De bedrijfsomzet bedraagt in elk van deze boekjaren minstens 9.000.000 euro per jaar."},
+        ]},
+      ]},
+      {name:"Gunningscriteria", fields:[
+        {key:"gunningscriteria", label:"Gunningscriteria — waarop de offertes beoordeeld worden", type:"table", defaultRows:3, addLabel:"+ Gunningscriterium toevoegen", columns:[
+          {key:"perceel", label:"Perceel (leeg laten indien geen percelen)", placeholder:"bv. Perceel 1: ..."},
+          {key:"naam", label:"Criterium", placeholder:"bv. Prijs"},
+          {key:"gewicht", label:"Gewicht / max. punten", placeholder:"bv. 100 (of: enige gunningscriterium)"},
+          {key:"toelichting", label:"Toelichting en evaluatiemethode", wide:true, placeholder:"bv. Regel van drie op basis van de eenheidsprijzen in de offerte."},
+        ]},
+      ]},
+      {name:"Borgtocht en prijsherziening", fields:[
+        {key:"borgtocht_bedrag", label:"Forfaitaire borgtocht", type:"text", placeholder:"bv. 10.000,00 euro"},
+      ]},
+      {name:"Ondertekening", fields:[
+        {key:"contact_naam", label:"Naam contactpersoon AZO", type:"text", default:CONTACT_DEFAULT.contact_naam},
+        {key:"contact_functie", label:"Functie", type:"text", default:CONTACT_DEFAULT.contact_functie},
+        {key:"project_contact_naam", label:"Naam dossierbeheerder (voor vragen over dit bestek)", type:"text", placeholder:"bv. Charlotte Verschelden"},
+        {key:"project_contact_email", label:"E-mail dossierbeheerder", type:"text", placeholder:"bv. charlotte@samenaankoopazo.be"},
+      ]},
+    ],
+    render(d){
+      const percelen = d.percelen || [];
+      const selectieBeroep = d.selectie_beroep || [];
+      const selectieEco = d.selectie_eco || [];
+      const gunningscriteria = d.gunningscriteria || [];
+      const heeftPercelen = percelen.length > 0;
+      const rowsFor = (arr, titel) => arr.filter(r => (r.perceel||"").trim().toLowerCase() === (titel||"").trim().toLowerCase());
+
+      const percelenHtml = heeftPercelen ? `
+        <p>Er zijn ${percelen.length} percelen:</p>
+        <ul>${percelen.map(p => `<li><p><strong>${esc(p.titel||"Perceel")}</strong>${p.omschrijving ? ': '+nl2br(p.omschrijving) : ''}</p></li>`).join("")}</ul>
+        <p>De inschrijver kan op één of meerdere percelen aanbieden. Meerdere percelen kunnen aan één en dezelfde inschrijver worden toegewezen.</p>
+      ` : "";
+
+      const gunningscriteriaHtml = gunningscriteria.length ? (heeftPercelen ? percelen.map(p => {
+        const rows = rowsFor(gunningscriteria, p.titel);
+        return rows.length ? `
+          <p><em><strong>${esc(p.titel||"Perceel")}</strong></em></p>
+          <table class="doc-table">
+          <thead><tr><th>Criterium</th><th>Gewicht / max. punten</th></tr></thead>
+          <tbody>${rows.map(g=>`<tr><td>${fill(g.naam,"Criterium")}</td><td>${fill(g.gewicht,"Gewicht")}</td></tr><tr><td colspan="2">${nl2br(g.toelichting||"")||fill("","Toelichting en evaluatiemethode")}</td></tr>`).join("")}</tbody>
+          </table>` : "";
+      }).join("") : `
+          <table class="doc-table">
+          <thead><tr><th>Criterium</th><th>Gewicht / max. punten</th></tr></thead>
+          <tbody>${gunningscriteria.map(g=>`<tr><td>${fill(g.naam,"Criterium")}</td><td>${fill(g.gewicht,"Gewicht")}</td></tr><tr><td colspan="2">${nl2br(g.toelichting||"")||fill("","Toelichting en evaluatiemethode")}</td></tr>`).join("")}</tbody>
+          </table>`) : `<p>${fill("", "Nog geen gunningscriteria toegevoegd.")}</p>`;
+
+      return `
+        ${letterhead(null, d.project_ref)}
+        <div class="doc-body">
+
+        <table class="doc-table">
+        <thead><tr><th>
+          <p><strong>BESTEK</strong></p>
+          <p><strong>VOOR DE RAAMOVEREENKOMST VOOR ${fill(d.opdracht_type,"leveringen").toString().toUpperCase()}</strong></p>
+          <p><em>met als voorwerp</em></p>
+          <p><strong>${fill(d.voorwerp,"Voorwerp van de opdracht")}</strong></p>
+          <p><strong>Ref. ${fill(d.project_ref,"referte")}</strong></p>
+        </th></tr></thead>
+        <tbody></tbody>
+        </table>
+
+        <table class="doc-table">
+        <thead><tr><th><strong>OPENBARE PROCEDURE — artikel 36 Wet Overheidsopdrachten</strong></th></tr></thead>
+        <tbody></tbody>
+        </table>
+
+        <table class="doc-table">
+        <thead><tr><th>
+          <p><strong>Aanbestedende overheid en ontwerper</strong></p>
+          <p><strong>Samenaankoop AZO VZW</strong></p>
+          <p><strong>Torhoutsestraat 338 te 8020 Oostkamp</strong></p>
+          <p><strong>O.N. 0627.619.593</strong></p>
+        </th></tr></thead>
+        <tbody></tbody>
+        </table>
+
+        <p class="verslag-h"><strong><u>VOORAFGAANDE</u></strong></p>
+        <p>Naam: Samenaankoop AZO VZW<br/>Adres: Torhoutsestraat 338, 8020 Oostkamp<br/>Contactpersoon: ${fill(d.project_contact_naam,"Charlotte Verschelden")}<br/>E-mail: ${fill(d.project_contact_email,"charlotte@samenaankoopazo.be")}</p>
+
+        <p><strong><u>Toepasselijke reglementering</u></strong></p>
+        <p>1. Wet van 17 juni 2016 inzake overheidsopdrachten en latere wijzigingen.</p>
+        <p>2. Koninklijk besluit van 18 april 2017 betreffende plaatsing overheidsopdrachten klassieke sectoren, en latere wijzigingen.</p>
+        <p>3. Koninklijk besluit van 14 januari 2013 tot bepaling van de algemene uitvoeringsregels van de overheidsopdrachten, en latere wijzigingen.</p>
+        <p>4. Wet van 17 juni 2013 betreffende de motivering, de informatie en de rechtsmiddelen inzake overheidsopdrachten, bepaalde opdrachten voor werken, leveringen en diensten en concessies, en latere wijzigingen.</p>
+        <p>5. Het Algemeen Reglement voor de Arbeidsbescherming (ARAB), Welzijnswet en Codex over het welzijn op het werk.</p>
+        <p>6. Wet van 11 februari 2013 tot vaststelling van sancties en maatregelen voor werkgevers van illegaal verblijvende onderdanen van derde landen.</p>
+        <p>7. De wet van 30 juli 2018 betreffende de bescherming van natuurlijke personen met betrekking tot de verwerking van persoonsgegevens, alsook de Verordening (EU) 2016/679 (AVG/GDPR).</p>
+        <p>Deze lijst is niet-limitatief. De kandidaten, respectievelijk de inschrijvers, respectievelijk de opdrachtnemers zijn gehouden alle op deze opdracht en procedure toepasselijke wet- en regelgeving na te leven.</p>
+
+        <p class="verslag-h"><strong><u>ADMINISTRATIEVE BEPALINGEN</u></strong></p>
+        <p>Dit eerste deel heeft betrekking op de regeling tot plaatsing van een overheidsopdracht tot de opdrachtnemers zijn aangesteld. De bepalingen die vervat zijn in dit deel, hebben betrekking op de wet van 17 juni 2016 en het koninklijk besluit van 18 april 2017 en latere wijzigingen.</p>
+
+        <p><strong><u>Beschrijving van de opdracht</u></strong></p>
+        <p>Dit Bestek bevat de regels betreffende de opmaak van de Offerte en de gunning. Het voorwerp van de gunningsprocedure is het afsluiten van een Raamovereenkomst voor ${fill(d.voorwerp,"voorwerp")}.</p>
+        <p>De raamovereenkomst heeft een vaste looptijd van maximum ${fill(d.looptijd_maanden,"48")} maanden en bevat geen (stilzwijgende) verlenging, behoudens uitdrukkelijk anders bepaald.</p>
+        <p>De opdracht voorziet geen onderhandeling. Eventuele latere leveringen vereisen een nieuwe rechtsgeldige plaatsingsprocedure of een toegelaten wijziging overeenkomstig het KB Uitvoering.</p>
+        ${percelenHtml}
+
+        <p><strong><u>Identiteit van de aanbesteder</u></strong></p>
+        <p>Samenaankoop AZO VZW<br/>Torhoutsestraat 338, 8020 Oostkamp</p>
+        <p>Deze opdracht is een opdracht in het kader van Samenaankoop Azo VZW. In toepassing van de Wet van 17 juni 2016 inzake overheidsopdrachten en het KB van 18 april 2017 plaatsing overheidsopdrachten, treedt AZO Samenaankoop vzw op als aankoopcentrale in de zin van artikel 47 Wet van 17 juni 2016 voor de leden van Samenaankoop AZO vzw.</p>
+        <p>Samenaankoop AZO VZW treedt op als aanbestedende overheid in die zin dat ze de plaatsingsprocedure beheert. Samenaankoop AZO VZW kan niet aansprakelijk gesteld worden mochten er gedurende de uitvoering van de Opdracht deelnemende Leden beslissen uit de Opdracht te stappen of mochten de verwachte volumes niet gehaald worden.</p>
+
+        <p><strong><u>Plaatsingsprocedure</u></strong></p>
+        <p>Overeenkomstig artikel 36 van de wet van 17 juni 2016, wordt de opdracht gegund bij wijze van de openbare procedure.</p>
+
+        <p><strong><u>Prijsvaststelling</u></strong></p>
+        <p>De opdracht wordt beschouwd als een opdracht tegen prijslijst. De opdracht wordt gegund op basis van de eenheidsprijzen opgegeven in de offerte. De opgegeven hoeveelheden zijn vermoedelijk en binden het bestuur op geen enkele wijze. De opdrachtnemer kan geen schadevergoeding eisen indien deze vermoedelijke hoeveelheden niet bereikt worden.</p>
+
+        <p><strong><u>Vorm en inhoud van de offerte</u></strong></p>
+        <p>De inschrijver maakt zijn offerte op in het Nederlands en vult het voorziene offerteformulier in. Indien hij deze op andere documenten maakt dan op het voorziene formulier, draagt hij de volle verantwoordelijkheid voor de volledige overeenstemming van de door hem aangewende documenten met het formulier.</p>
+        <p>Bij een elektronische indiening van de offertes moet het indieningsrapport voorzien zijn van een gekwalificeerde elektronische handtekening. Als de ondertekening gebeurt door een gemachtigde, vermeldt hij duidelijk zijn volmachtgever(s) en voegt de nodige bewijsstukken toe. Prijzen moeten steeds opgegeven worden in euro.</p>
+
+        <p><strong><u>Onderaanneming</u></strong></p>
+        <p>De inschrijver vermeldt in zijn offerte welk gedeelte van de opdracht hij voornemens is in onderaanneming te geven en welke onderaannemers hij voorstelt, indien deze gekend zijn. Om voldoende mededinging te waarborgen, is het gezamenlijk indienen van één enkele offerte door meerdere geselecteerde kandidaten verboden.</p>
+
+        <p><strong><u>Indienen van de offerte</u></strong></p>
+        <p>Enkel de offertes die uiterlijk ${fill(d.datum_limiet,"datum en uur")} via het platform e-Procurement (https://www.publicprocurement.be/) worden ingediend, worden door de aanbestedende overheid aanvaard. Het versturen van een offerte per e-mail of op papier voldoet niet aan deze voorwaarden en is niet toegestaan.</p>
+        <p>De offerte moet elektronisch ondertekend worden met een geldige gekwalificeerde elektronische handtekening op het indieningsrapport. Een gescande handtekening is onvoldoende.</p>
+        <p>Door het indienen van een offerte aanvaarden de inschrijvers onvoorwaardelijk de inhoud van het bestek en de bijhorende opdrachtdocumenten.</p>
+
+        <p><strong><u>Opening van de offertes</u></strong></p>
+        <p>De offertes worden elektronisch ingediend, er is geen openbare zitting.</p>
+
+        <p><strong><u>Verbintenistermijn</u></strong></p>
+        <p>De termijn gedurende dewelke de inschrijver door zijn offerte gebonden blijft, bedraagt 35 kalenderdagen (incl. stand-still periode van 15 kalenderdagen), te rekenen vanaf de limietdatum voor ontvangst van de offertes.</p>
+
+        <p><strong><u>Uitsluitingsgronden en kwalitatieve selectie</u></strong></p>
+        <p>De ondernemer legt het door hem ingevulde Uniform Europees Aanbestedingsdocument (UEA) voor, dat bestaat uit een bijgewerkte eigen verklaring en dat door de aanbestedende overheid als voorlopig bewijs wordt aanvaard ter vervanging van door overheidsinstanties of derden afgegeven documenten of certificaten, ter bevestiging dat de betrokken ondernemer:</p>
+        <p>1° zich niet bevindt in een van de uitsluitingssituaties als bedoeld in de artikelen 67 tot 69 van de wet van 17 juni 2016;</p>
+        <p>2° voldoet aan de toepasselijke selectiecriteria, als vastgesteld overeenkomstig artikel 71 van de wet van 17 juni 2016.</p>
+        <p>Ondernemers kunnen het reeds in een vorige overheidsopdrachtenprocedure gebruikte UEA opnieuw gebruiken, mits zij bevestigen dat de daarin opgenomen gegevens nog steeds correct zijn.</p>
+        <p>Artikel 70 van de wet van 17 juni 2016 is van toepassing: de gegadigde of inschrijver deelt op eigen initiatief mee of hij bij het begin van de procedure de in artikel 70, lid 1, bedoelde corrigerende maatregelen heeft genomen.</p>
+
+        <p><strong><u>Geschiktheid om de beroepsactiviteit uit te oefenen (selectiecriteria)</u></strong></p>
+        <p>Het UEA, waarmee de ondernemer verklaart dat hij voldoet aan de onderstaande selectiecriteria:</p>
+        <table class="doc-table">
+        <thead><tr><th>Nr.</th><th>Selectiecriteria</th><th>Minimumvereisten</th></tr></thead>
+        <tbody>
+          ${selectieBeroep.length ? selectieBeroep.map((r,i)=>`<tr><td>${i+1}</td><td>${fill(r.criterium,"Selectiecriterium")}</td><td>${fill(r.minimum,"Minimumvereiste")}</td></tr>`).join("") : `<tr><td colspan="3">${fill("","Nog geen criteria toegevoegd.")}</td></tr>`}
+        </tbody>
+        </table>
+
+        <p><strong><u>Economische en financiële draagkracht van de kandidaat (selectiecriteria)</u></strong></p>
+        <table class="doc-table">
+        <thead><tr><th>Nr.</th><th>Selectiecriteria</th><th>Minimumvereisten</th></tr></thead>
+        <tbody>
+          ${selectieEco.length ? selectieEco.map((r,i)=>`<tr><td>${i+1}</td><td>${fill(r.criterium,"Selectiecriterium")}</td><td>${fill(r.minimum,"Minimumvereiste")}</td></tr>`).join("") : `<tr><td colspan="3">${fill("","Nog geen criteria toegevoegd.")}</td></tr>`}
+        </tbody>
+        </table>
+
+        <p><strong><u>Onderaannemers — beroep op de draagkracht</u></strong></p>
+        <p>De kandidaat kan zich beroepen op de draagkracht van onderaannemers of andere entiteiten. In dat geval voegt de kandidaat de nodige documenten toe aan zijn offerte, waaruit de verbintenis van deze onderaannemers of van andere entiteiten blijkt om de voor de opdracht noodzakelijke middelen ter beschikking te stellen van de kandidaat.</p>
+
+        <p><strong><u>Gunningscriteria</u></strong></p>
+        <p>Voor de keuze van de economisch meest voordelige offerte worden de regelmatige offertes van de inschrijvers getoetst aan onderstaande gunningscriteria.</p>
+        ${gunningscriteriaHtml}
+
+        <p><strong><u>Varianten en opties</u></strong></p>
+        <p>Vrije varianten zijn niet toegestaan. Opties zijn enkel toegelaten indien uitdrukkelijk vermeld in de opdrachtdocumenten.</p>
+
+        <p><strong><u>Keuze van offerte</u></strong></p>
+        <p>De aanbestedende overheid kiest de economisch meest voordelige regelmatige offerte, rekening houdend met bovenstaande gunningscriteria.</p>
+
+        <p><strong><u>Gunning en vragen</u></strong></p>
+        <p>De aanbestedende overheid is niet verplicht de opdracht te gunnen. Zij kan afzien van de procedure met een gemotiveerd besluit en die eventueel herbeginnen, desnoods op een andere wijze.</p>
+        <p>Vragen aangaande dit bestek dienen uitsluitend schriftelijk per e-mail gesteld te worden tot ten laatste tien dagen vóór de uiterste indieningsdatum.</p>
+
+        <p><strong><u>Verwerking en bescherming van persoonsgegevens</u></strong></p>
+        <p>Persoonsgegevens die in het kader van deze procedure worden verzameld, worden verwerkt overeenkomstig de Algemene Verordening Gegevensbescherming (AVG/GDPR).</p>
+
+        <p class="verslag-h"><strong><u>DEFINITIES EN TECHNISCHE SPECIFICATIES</u></strong></p>
+        <p>${nl2br(d.definities_tekst||"")||fill("","Definities, technische specificaties en bijzondere bepalingen eigen aan dit dossier")}</p>
+
+<p class="verslag-h">Contractuele bepalingen</p>
+<p>Dit tweede deel regelt de procedure die betrekking heeft op de uitvoering van de opdracht.</p>
+<p>Voor zover er niet van afgeweken wordt, is het KB Uitvoering en latere wijzigingen tot bepaling van de algemene uitvoeringsregels van de overheidsopdrachten van toepassing.</p>
+<p class="verslag-h">Leidend ambtenaar</p>
+<p>Samenaankoop AZO VZW is als aankoopcentrale enkel verantwoordelijk voor de fase tot de sluiting van de opdracht. Dit is de betekening van de gunning van de opdracht aan de regelmatige inschrijver, die de economisch meest voordelige offerte heeft ingediend.</p>
+<p>De verantwoordelijkheid voor de volledige uitvoering van de opdracht ligt bij de leden (zie ook verder onder ‘aansprakelijkheid’).</p>
+<p>De leiding en het toezicht op de uitvoering van deze opdracht is toevertrouwd aan elk lid dat deelneemt aan deze opdracht.</p>
+<p>Bij het begin van de uitvoering van de opdracht zal elk lid de verantwoordelijke leidend ambtenaar meedelen aan de opdrachtnemer.</p>
+<p class="verslag-h">Onderaannemers</p>
+<p>De inschrijver kan zich beroepen op de draagkracht van onderaannemers of andere entiteiten. In dat geval voegt de inschrijver de nodige documenten toe aan zijn offerte waaruit de verbintenis van deze onderaannemers of van andere entiteiten blijkt om de voor de opdracht noodzakelijke middelen ter beschikking te stellen van de inschrijver.</p>
+<p>Wanneer de opdrachtnemer voor zijn kwalitatieve selectie in verband met de criteria inzake de studie- en beroepskwalificaties, of inzake de relevante beroepservaring, gebruik heeft gemaakt van de draagkracht van vooraf bepaalde onderaannemers, is de opdrachtnemer verplicht deze voorgedragen onderaannemers in te zetten bij de uitvoering van de opdracht. Het gebruik van andere onderaannemers is onderworpen aan de toestemming van de aanbestedende overheid.</p>
+<p>In toepassing van artikel 74 van het KB Plaatsing, vermeldt de inschrijver welk gedeelte van de opdracht hij eventueel voornemens is in onderaanneming te geven en welke onderaannemers hij voorstelt.</p>
+<p>De opdrachtnemer blijft aansprakelijk ten opzichte van de aanbestedende overheid wanneer hij de uitvoering van zijn verbintenissen geheel of gedeeltelijk aan onderaannemers toevertrouwt.</p>
+<p>De aanbestedende overheid acht zich door geen enkele contractuele band verbonden met die onderaannemers.</p>
+<p>In toepassing van artikel 12/4 van het KB van 14 januari 2013, voldoen deze onderaannemers aan de minimumeisen inzake technische en beroepsbekwaamheid in verhouding tot het deel van de opdracht dat zij uitvoeren.</p>
+<p class="verslag-h">Verzekeringen</p>
+<p>De opdrachtnemer sluit de verzekeringen die zijn aansprakelijkheid inzake arbeidsongevallen dekken, alsook zijn burgerlijke aansprakelijkheid ten aanzien van derden bij de uitvoering van de opdracht.</p>
+<p>Binnen een termijn van dertig dagen na het sluiten van de opdracht toont de opdrachtnemer aan dat hij deze verzekeringscontracten is aangegaan, aan de hand van een attest waaruit de door de opdrachtdocumenten vereiste omvang van de gewaarborgde aansprakelijkheid blijkt.</p>
+<p>Op elk ogenblik tijdens de uitvoering van de opdracht legt de opdrachtnemer dit attest voor, binnen een termijn van vijftien dagen na ontvangst van het verzoek van de aanbestedende overheid.</p>
+<p class="verslag-h">Borgtocht</p>
+<p>De borgtocht wordt beheerd per gesloten opdracht.</p>
+<p>Er wordt een forfaitaire borg gesteld van ${fill(d.borgtocht_bedrag, "10.000,00 euro")}.</p>
+<p class="verslag-h">Herzieningsclausule: Prijsherzieningen</p>
+<p>Elke vraag tot prijsherziening moet degelijk onderbouwd en afdoende gemotiveerd worden.</p>
+<p class="verslag-sub">Jaarlijkse prijsherziening</p>
+<p>De in de offerte opgegeven eenheidsprijzen blijven vast gedurende de eerste twaalf (12) maanden vanaf de startdatum van de raamopdracht zoals vermeld in de sluitingsbrief.</p>
+<p>Na het verstrijken van deze periode kan de opdrachtnemer maximaal eenmaal per periode van twaalf (12) maanden een schriftelijke aanvraag tot prijsherziening indienen.</p>
+<p>De prijsherziening wordt uitsluitend berekend op basis van de evolutie van de Consumptieprijsindex (CPI), zoals gepubliceerd door Statbel.</p>
+<p><strong><u>De herziene prijs wordt berekend volgens de volgende formule:</u></strong></p>
+<p><strong><u>P₁ = P₀ × (I₁ / I₀)</u></strong></p>
+<p><strong><u>waarbij:</u></strong></p>
+<p>- P₀ = de geldende contractuele eenheidsprijs;</p>
+<p>- P₁ = de herziene eenheidsprijs;</p>
+<p>- I₀ = de CPI van de maand die voorafgaat aan de uiterste datum voor indiening van de offerte;</p>
+<p>- I₁ = de CPI van de maand die voorafgaat aan de datum van de aanvraag tot prijsherziening.</p>
+<p>Een aanvraag tot prijsherziening is slechts ontvankelijk indien:</p>
+<p><strong>-</strong> zij schriftelijk wordt ingediend;</p>
+<p><strong>-</strong> zij ten minste dertig (30) kalenderdagen vóór de gewenste ingangsdatum wordt aangevraagd;</p>
+<p><strong>-</strong> de berekening van de prijsherziening en de gebruikte indexcijfers worden bijgevoegd;</p>
+<p><strong>-</strong> de prijsherziening uitsluitend betrekking heeft op de nog uit te voeren leveringen vanaf de datum van goedkeuring door de aanbestedende overheid.</p>
+<p>Een prijsherziening werkt nooit retroactief en heeft geen invloed op reeds bestelde, geleverde of gefactureerde producten.</p>
+<p>Indien de CPI daalt, behoudt de aanbestedende overheid zich het recht voor om overeenkomstig dezelfde formule een evenredige prijsverlaging toe te passen.</p>
+<p>De prijsherziening treedt slechts in werking na uitdrukkelijke schriftelijke goedkeuring door de aanbestedende overheid.</p>
+<p>Bij gebrek aan een voldoende gemotiveerde aanvraag of indien niet aan de bovenstaande voorwaarden is voldaan, blijven de contractuele prijzen ongewijzigd.</p>
+<p class="verslag-sub">Bijzondere prijsherziening</p>
+<p>Slechts bij zeer bijzondere omstandigheden (bvb hoge inflatie, oorlogen) kan de opdrachtnemer vroeger een voorstel tot prijsherziening indienen.</p>
+<p>De opdrachtnemer dient een aanzienlijk nadeel aan te tonen bij het aanvragen van deze prijsherziening, alsook aan te geven wat deze bijzondere omstandigheden zijn en hoe de producten geïmpacteerd worden.</p>
+<p>De aanvraag moet gebeuren binnen de 30 dagen na kennisname van de bijzondere omstandigheden.</p>
+<p>Indien de prijsherziening wordt goedgekeurd door de aanbestedende overheid, gaat ze in op de eerste van de maand volgend op deze van de goedkeuring.</p>
+<p>In deze omstandigheden kan ook de aanbestedende overheid een prijsherziening aanvragen indien men merkt dat de markt terug stabiliseert en de prijzen terug dalen.</p>
+<p>Mocht de inschrijver zich hier niet naar schikken om terug marktconforme prijzen aan te bieden in consensus met de vraag van de opdrachtgever kan de opdrachtgever de overeenkomst vroegtijdig verbreken.</p>
+<p>De prijsherziening kan enkel en alleen toepassing hebben op de producten uit de catalogus.</p>
+<p>Dropkosten kunnen tijdens de looptijd van de raamovereenkomst niet gewijzigd worden.</p>
+<p class="verslag-h">Voorschotten</p>
+<p>Voorschotten zijn niet van toepassing op de raamopdracht.</p>
+<p>Voorschotten binnen de deelopdrachten zijn enkel mogelijk binnen wat wettelijk bepaald is ter zake (artikel 12/1 Wet Overheidsopdrachten e.v.).</p>
+<p class="verslag-h">Looptijd en leveringstermijn</p>
+<p><strong>Totale</strong><strong> maximale</strong><strong> </strong><strong>looptijd</strong><strong> </strong><strong>van</strong><strong> </strong><strong>deze</strong><strong> </strong><strong>raamovereenkomst: </strong></p>
+<p>48 maanden (12 maanden + optie 3 x 12 maanden).</p>
+<p>Voorziene begindatum van de leveringen: ${fill(d.begindatum_leveringen, "01 oktober 2026")}.</p>
+<p>Voorziene einddatum van de leveringen: ${fill(d.einddatum_leveringen, "30 september 2027")} (tenzij verlenging).</p>
+<p>Deze verlenging verloopt stilzwijgend, behoudens een andersluidend aangetekende zending van de aanbestedende overheid uiterlijk 1 maand vóór het verstrijken van de looptijd van de opdracht.</p>
+<p>De opdracht gaat in op de datum zoals vermeld zal worden in de sluitingsbrief.</p>
+<p>De looptijd voor de individuele leden gaat in op het ogenblik van de afroep van het individueel AZO-lid.</p>
+<p>De aanbestedende overheid specifieert geen leveringstermijn. Bijgevolg moet de opdrachtnemer zelf een leveringstermijn voorstellen in zijn offerte (in <strong>werkdagen</strong>).</p>
+<p>De beëindiging van de raamovereenkomst leidt niet tot de beëindiging van de individuele opdrachten, die binnen de raamovereenkomst worden afgesloten. Deze individuele opdrachten blijven van kracht tot het einde van hun duur.</p>
+<p>De opdrachtnemer dient zich te allen tijde te houden aan de leveringstermijn afgesproken per specifieke deelopdracht, deze kan nooit langer zijn dan de voorgestelde leveringstermijn in de offerte.</p>
+<p class="verslag-h">Behandelingstermijn</p>
+<p>De opdrachtnemer bezorgt aan de aanbesteder een factuur<em> </em>alsook alle vereiste documenten conform dit bestek en de gevraagde documenten bij deelbestellingen.</p>
+<p>De aanbesteder beschikt over een behandelingstermijn van 30 dagen om de factuur en de eventueel vereiste documenten op hun juistheid te controleren en de opdrachtnemer te betalen.</p>
+<p>De behandelingstermijn begint te lopen vanaf:</p>
+<ul><li><p>De datum van ontvangst van de regelmatig opgemaakte factuur en de eventueel vereiste documenten, of </p></li><li><p>Vanaf de datum van levering indien de factuur vóór de levering wordt ontvangen of indien de datum van ontvangst van de factuur niet vaststaat. </p></li></ul>
+<p>De betaling kan in ieder geval pas plaatsvinden voor zover de aanbesteder beschikt over een <u>regelmatig opgemaakte factuur</u> en de eventueel vereiste documenten. Een onjuist opgemaakte factuur of het ontbreken van de vereiste documenten verhindert dat de behandelingstermijn begint te lopen.</p>
+<p>Er wordt in dit kader op gewezen dat afnemers van deelbestellingen binnen deze raamopdracht onder de gezondheidssector kunnen vallen die een afwijkende regeling heeft conform artikel 9, §3/1 KB Uitvoering.</p>
+<p>In dit geval is er een afzonderlijke verificatietermijn 30 dagen vanaf de leveringsdatum. Deze termijn begint te lopen op de dag na de aankomst van de leveringen op de bestemming, op voorwaarde dat de aanbesteder in het bezit is van de levernota en de correct opgemaakte factuur.</p>
+<p>De betalingstermijn wordt gerekend vanaf de einddatum van de verificatie, voor elk van de (gedeeltelijke) leveringen en bedraagt maximaal 60 dagen.</p>
+<p>Dit bestek wijkt uitdrukkelijk af van de bepalingen van artikel 5.210 van het Burgerlijk Wetboek inzake de toerekening van de betalingen. Elke betaling zal dan ook bij voorrang toegerekend worden op de hoofdsommen en pas daarna op de intresten.</p>
+<p>Alle overdrachten en inpandgevingen van schuldvorderingen zoals bedoeld in artikel 87/1, §4 van de Wet Overheidsopdrachten moeten worden verstuurd naar:</p>
+<p>Samenaankoop AZO VZW</p>
+<p>De heer Frederique Vandenbussche</p>
+<p>Torhoutsestraat 338</p>
+<p>8020 Oostkamp</p>
+<p>Tel : 0498 86 27 37</p>
+<p>Email :</p>
+<p class="verslag-sub">Elektronische facturatie</p>
+<p>Overeenkomstig artikel 14/1 van de Wet Overheidsopdrachten, moeten de facturen in elektronische vorm (in XML-formaat volgens de PEPPOL bis standaard) verzonden worden. De facturen moeten rechtstreeks ingediend worden via https://digital.belgium.be/e-invoicing of via uw boekhoudprogramma (verbonden met het PEPPOL-netwerk).</p>
+<p>De elektronische factuur bevat minimaal de volgende kernelementen: <br/>1° proces- en factuurkenmerken;</p>
+<p>2° factuurperiode;</p>
+<p>3° informatie over de verkoper; <br/>4° informatie over de koper;</p>
+<p>5° informatie over de begunstigde van de betaling;</p>
+<p>6° informatie over de ﬁscaal vertegenwoordiger van de verkoper; <br/>7° verwijzing naar de overeenkomst;</p>
+<p>8° leveringsdetails;</p>
+<p>9° betalingsinstructies;</p>
+<p>10° informatie over kortingen of toeslagen; <br/>11° informatie over de factuurposten;</p>
+<p>12° totalen op de factuur;</p>
+<p>13° uitsplitsing van de btw per tarief.</p>
+<p class="verslag-h">Waarborgtermijn</p>
+<p>De opdrachtnemer moet zelf een waarborgtermijn specifiëren voor deze leveringen. De waarborgtermijn begint vanaf de dag van de voorlopige oplevering op de leveringsplaats.</p>
+<p>De opdrachtnemer is evenwel aansprakelijk voor de goederen tot op het moment van de goedkeuring van de schuldvordering/factuur, tenzij na de levering verliezen of beschadigingen zouden ontstaan te wijten aan overmacht of aan tekortkomingen van de aanbesteder in de zin van respectievelijk artikel 38/9 of 38/11 KB Uitvoering.</p>
+<p>De opdrachtnemer neemt de volledige aansprakelijkheid op zich voor de door hem geleverde goederen en vrijwaart de aanbesteder voor alle rechtsvorderingen die zouden kunnen ingesteld worden en al de hierop betrekking hebbende kosten, boeten en veroordelingen.</p>
+<p>De opdrachtnemer is verantwoordelijk voor de schade die het gevolg is van de door hem of voor zijn rekening uitgevoerde prestaties en de levering. Alle schade aangericht bij levering door de opdrachtnemer (of diens aangestelde) op het leveringsadres en in de lokalen van het leveringsadres moet worden vergoed door de opdrachtnemer.</p>
+<p>De opdrachtnemer (of diens aangestelde) meldt de schade direct aan de contactpersoon van de aanbesteder. De contactpersoon kan ook de schade melden aan de opdrachtnemer.</p>
+<p>Wanneer het bestelde goed of de bestelde goederen tenietgaan, vooraleer zij geleverd zijn, is de aanbesteder bevrijd van zijn verplichting tot betaling. De opdrachtnemer staat op eigen kost voor de vervanging van de tenietgegane goederen.</p>
+<p>De opdrachtnemer is tevens aansprakelijk ten opzichte van de aanbestedende overheid voor schadevergoedingen aan derden wegens vertraging in de levering van de goederen of wanneer de opdrachtnemer op een andere manier in gebreke blijft.</p>
+<p class="verslag-h">Oplevering</p>
+<p>Alle opleveringskosten vallen ten laste van de opdrachtnemer.</p>
+<p>Indien bij de levering abnormaliteiten worden vastgesteld, zal dit aan de opdrachtnemer worden</p>
+<p>gemeld. De opdrachtnemer is verplicht om niet-conform uitgevoerde leveringen te herbeginnen.</p>
+<p>De opdrachtnemer wordt belast met de kwantiteitscontrole van zijn eigen leveranciers en van de producten die hij in het kader van zijn opdracht levert.</p>
+<p>Evenwel behoudt de opdrachtgever zich het recht voor ten allen tijde toezicht en controle uit te oefenen op de geleverde producten en hoeveelheden.</p>
+<p>De producten en leveringswijze moeten voldoen aan de voorwaarden zoals vermeld in dit bestek.</p>
+<p class="verslag-h">Illegaal verblijvende onderdanen</p>
+<p>Wanneer de opdrachtnemer of onderaannemer het in artikel 49/2, vierde lid, van het Sociaal Strafwetboek bedoelde afschrift ontvangt waarmee zij ervan in kennis wordt gesteld dat zij een of meerdere illegaal verblijvende onderdanen van een derde land in België tewerkstelt, onthoudt deze onderneming zich ervan, met onmiddellijke ingang, de plaats van uitvoering van de opdracht nog verder te betreden of nog verder uitvoering aan de opdracht te geven, en wel tot de aanbestedende instantie een bevel in andere zin zou geven.</p>
+<p>Hetzelfde geldt wanneer de voormelde opdrachtnemer of onderaannemer ervan in kennis wordt gesteld:</p>
+<p>- Ofwel door de opdrachtnemer of de aanbestedende instantie, dat zij de in artikel 49/2, eerste dan wel tweede lid, van het Sociaal Strafwetboek bedoelde kennisgeving heeft ontvangen die betrekking heeft op deze onderneming;</p>
+<p>- Ofwel door middel van de in artikel 35/12 van de wet van 12 april 1965 betreffende de bescherming van het loon der werknemers bedoelde aanplakking, dat zij een of meerdere illegaal verblijvende onderdanen van een derde land in België tewerkstelt.</p>
+<p>De opdrachtnemer of onderaannemer is er bovendien toe gehouden een clausule op te nemen in de onderaannemingsovereenkomst die zij desgevallend zou sluiten, op grond waarvan:</p>
+<p>1° de onderaannemer er zich van onthoudt de plaats van uitvoering van de opdracht nog verder te betreden of nog verder uitvoering aan de opdracht te geven, indien uit een in uitvoering van artikel 49/2 van het Sociaal Strafwetboek opgestelde kennisgeving blijkt dat deze onderaannemer een illegaal verblijvende onderdaan van een derde land tewerkstelt;</p>
+<p>2° de niet-naleving van de onder 1° gestelde verplichting aanzien wordt als een ernstige tekortkoming in hoofde van de onderaannemer, ingevolge waarvan de onderneming is gemachtigd de overeenkomst te verbreken;</p>
+<p>3° de onderaannemer ertoe is gehouden een soortgelijke clausule als onder 1° en 2° op te nemen in de onderaannemingsovereenkomsten en ervoor te zorgen dat dergelijke clausules ook in de verdere onderaannemingsovereenkomsten worden opgenomen.</p>
+<p class="verslag-h">Loon verschuldigd aan werknemers</p>
+<p>Wanneer de opdrachtnemer of onderaannemer het in artikel 49/1, derde lid van het Sociaal Strafwetboek bedoelde afschrift ontvangt van kennisgeving waarmee hij ervan in kennis wordt gesteld dat hij een zwaarwichtige inbreuk heeft begaan op de verplichting zijn werknemers tijdig het loon te betalen waarop deze recht hebben, onthoudt hij zich ervan, met onmiddellijke ingang, de plaats van uitvoering van de opdracht nog verder te betreden of nog verder uitvoering aan de opdracht te geven, en wel tot hij het bewijs voorlegt aan de aanbestedende instantie dat de betrokken werknemers integraal zijn uitbetaald.</p>
+<p>Hetzelfde geldt wanneer de voormelde opdrachtnemer of onderaannemer ervan in kennis wordt gesteld:</p>
+<p>- Ofwel, naargelang het geval, door de opdrachtnemer of de aanbestedende instantie, dat hij de in artikel 49/1, eerste lid, van het Sociaal Strafwetboek bedoelde kennisgeving heeft ontvangen die betrekking heeft op deze opdrachtnemer of onderaannemer;</p>
+<p>- Ofwel door middel van de in artikel 35/4 van de wet van 12 april 1965 betreffende de bescherming van het loon der werknemers bedoelde aanplakking.</p>
+<p>De opdrachtnemer of onderaannemer is er bovendien toe gehouden een clausule op te nemen in de onderaannemingsovereenkomst die hij desgevallend zou sluiten, op grond waarvan:</p>
+<p>1° de onderaannemer er zich van onthoudt de plaats van uitvoering van de opdracht nog verder te betreden of nog verder uitvoering aan de opdracht te geven, indien uit een in uitvoering van artikel 49/1 van het Sociaal Strafwetboek opgestelde kennisgeving blijkt dat deze onderaannemer op zwaarwichtige wijze tekortschiet in zijn verplichting het aan zijn werknemers verschuldigde loon tijdig uit te betalen;</p>
+<p>2° de niet-naleving van de onder 1° gestelde verplichting aanzien wordt als een ernstige tekortkoming in hoofde van de onderaannemer, ingevolge waarvan de opdrachtnemer is gemachtigd de overeenkomst te verbreken;</p>
+<p>3° de onderaannemer ertoe is gehouden een soortgelijke clausule als onder 1° en 2° op te nemen in de onderaannemingsovereenkomsten en ervoor te zorgen dat dergelijke clausules ook in de verder onderaannemingsovereenkomsten worden opgenomen.</p>
+<p class="verslag-h">Toekenning deelopdrachten - Middelen van optreden</p>
+<p class="verslag-sub">Cascadesysteem</p>
+<p>De raamovereenkomst zal, voor zover er voldoende regelmatige offertes werden ingediend, gesloten worden met de drie inschrijvers per perceel die de economisch meest voordelige offertes hebben ingediend. De inschrijvers zullen per perceel worden gerangschikt op basis van de beoordeling van de offertes aan de hand van de gunningscriteria.</p>
+<p>De uitvoering van de op de raamovereenkomst gesteunde opdrachten zal gebeuren overeenkomstig een cascadesysteem. De opdrachtnemer welke als eerste is gerangschikt op basis van de gunningscriteria zal bij deelopdrachten in eerste instantie worden gecontacteerd om de op de raamovereenkomst gesteunde opdrachten uit te voeren.</p>
+<p>Indien de eerst gerangschikte de bestelling niet of niet tijdig kan leveren (omwille van 1 van de hierna opgesomde redenen), kan de tweede in de rangschikking aangesproken worden, etc.</p>
+<p>Van de rangorde kan worden afgeweken indien één van de volgende omstandigheden zich voordoet:</p>
+<p>a) de eerst gerangschikte opdrachtnemer bevestigt schriftelijk de betrokken deelopdracht niet of niet binnen de bepaalde termijn te kunnen uitvoeren;</p>
+<p>b) de eerst gerangschikte opdrachtnemer beschikt aantoonbaar niet over de contractueel vereiste capaciteit om de deelopdracht uit te voeren binnen de gevraagde uitvoeringstermijn;</p>
+<p>c) de gevraagde prestaties vallen, overeenkomstig de bepalingen van de raamovereenkomst, geheel of gedeeltelijk buiten het aangeboden assortiment, de aangeboden dienstverlening of de technische specialisatie van de eerste of tweede gerangschikte opdrachtnemer;</p>
+<p>d) er zich een geval van overmacht voordoet waardoor de eerst gerangschikte opdrachtnemer de deelopdracht tijdelijk onmogelijk kan uitvoeren.</p>
+<p>Enkel en alleen de afnemer is verantwoordelijk voor de correcte toepassing van de in de raamovereenkomst vastgelegde rangorde, de voorwaarden waaronder van de rangorde kan worden afgeweken en, in voorkomend geval, voor de motivering van dergelijke beslissing.</p>
+<p>De afnemer draagt de volledige verantwoordelijkheid voor de rechtmatigheid van de plaatsing van de deelopdracht en voor de naleving van de beginselen van gelijke behandeling, transparantie en non-discriminatie.</p>
+<p>Samenaankoop AZO VZW is niet aansprakelijk voor onregelmatigheden of fouten die voortvloeien uit de toepassing van het cascadesysteem door een afnemer.</p>
+<p class="verslag-sub">Middelen van optreden</p>
+<p>In geval van structurele problemen in de uitvoering door de eerst gerangschikte onderneming, zal de toewijzing definitief en in zijn geheel overgaan naar de tweede gerangschikte, zonder plaatsing van een nieuwe opdracht. Structurele problemen in de uitvoering kunnen onder andere zijn (niet-exhaustieve lijst):</p>
+<p>1° De leveringen worden niet uitgevoerd volgens de voorwaarden van de opdrachtdocumenten;</p>
+<p>2° De prestaties vorderen onvoldoende om de leveringen tijdig te voltooien;</p>
+<p>3° De geldig gegeven schriftelijke bevelen worden niet nageleefd;</p>
+<p>4° De kwartaalrapporten worden niet tijdig bezorgd (zie artikel I.14 - binnen de 15 dagen na het verlopen van het kwartaal)</p>
+<p>5° De betaling van de AZO-factuur gebeurt niet binnen de op de factuur beschreven betalingstermijn;</p>
+<p>6° De opdrachtnemer hanteert zonder toestemming duurdere prijzen dan deze opgegeven in zijn prijslijst;</p>
+<p>7° De opdrachtnemer levert, voor de producten die hij aanbiedt in de korf/inventaris/catalogus, tijdens de loop van de opdracht andere merken of kwaliteit zonder akkoord van de leidend ambtenaar;</p>
+<p>8° Eén of meerdere leden kunnen na maximum 30 kalenderdagen de artikelen nog niet of onvoldoende afnemen (niet-limitatieve voorbeelden: er is nog geen klantnummer, geen SPOC, er kan niet geleverd worden in de beschreven verpakking of A-merken kunnen zonder geldige reden niet geleverd worden).</p>
+<p>De leidend ambtenaar stelt de tekortkomingen vast in een proces-verbaal van ingebrekestelling. Hij zendt een kopie van het proces-verbaal aangetekend naar de opdrachtnemer. Die moet binnen de 14 dagen zijn tekortkomingen herstellen, tenzij in onderling overleg anders overeengekomen.</p>
+<p>De opdrachtnemer kan binnen de 15 dagen volgend op de postdatum van de verzending van het proces-verbaal zijn verweermiddelen naar voor brengen. Doet hij dit niet, dan geldt dit als erkenning van de vastgestelde feiten.</p>
+<p>Indien de opdrachtnemer nalaat of niet tijdig reageert op het proces-verbaal van ingebrekestelling, zijn tekortkomingen toegeeft of in de ogen van de opdrachtgever een onvoldoende verantwoording geeft, dan kan de opdrachtgever volgende maatregelen van ambtswege toepassen:</p>
+<p>1° Eenzijdig verbreken van de opdracht met verwerving van de borgtocht;</p>
+<p>2° De opdracht geheel of gedeeltelijk in eigen beheer uitvoeren;</p>
+<p>3° Overeenkomsten sluiten met één of meer derden voor de verdere uitvoering van de opdracht.</p>
+<p>4° Een boete opleggen zoals beschreven in dit bestek.</p>
+<p>Voor zowel laattijdige of onvolledige indiening van de kwartaalrapporten en de niet tijdige betaling van de AZO-factuur wordt door de aanbestedende overheid een boete van 500,00 € opgelegd. Deze boete doet geen afbreuk aan of substitueert geenszins verdere sanctie zoals verwijlintresten en andere.</p>
+<p>In de gevallen 2° en 3° worden de meerkosten aangerekend aan de in gebreke gebleven opdrachtnemer, maar komt in voorkomend geval de minkost ten goede aan de opdrachtgever.</p>
+<p>Ter compensatie van de kosten voor de nieuwe opdracht(en) wordt 1% van de oorspronkelijke aannemingssom aangerekend met een maximum van 15.000,00 euro.</p>
+<p>De in gebreke gebleven opdrachtnemer kan voor een bepaalde tijd uitgesloten worden van deelneming aan nieuwe opdrachten. Hij zal zich in dat geval vooraf kunnen verdedigen.</p>
+<p>De aandacht van de opdrachtnemer wordt gevestigd op het feit dat hij zich in geval van een aantoonbare miskenning van de bijzondere uitvoeringsvoorwaarden inzake non-discriminatie en de naleving van de sociale en ethische criteria blootstelt aan de middelen van optreden.</p>
+<p>De vertragingsboetes wegens overschrijding van de bindende deelleveringstermijnen worden berekend à rato van 0,1% per dag vertraging met een maximum van 7,5% van de waarde van de vertraagde leveringen (zie art. 123, §1 van het KB Uitvoering).</p>
+<p class="verslag-h">Aansprakelijkheid</p>
+<p>De opdrachtnemer is aansprakelijk voor de goederen tot op het moment van de goedkeuring van de schuldvordering/factuur, tenzij na de levering verliezen of beschadigingen zouden ontstaan te wijten aan overmacht of aan tekortkomingen van de aanbesteder in de zin van respectievelijk artikel 38/9 of 38/11 KB Uitvoering.</p>
+<p>De opdrachtnemer neemt de volledige aansprakelijkheid op zich voor de door hem geleverde goederen en vrijwaart de aanbesteder voor alle rechtsvorderingen die zouden kunnen ingesteld worden en al de hierop betrekking hebbende kosten, boeten en veroordelingen.</p>
+<p>De opdrachtnemer is verantwoordelijk voor de schade die het gevolg is van de door hem of voor zijn rekening uitgevoerde prestaties en de levering. Alle schade aangericht bij levering door de opdrachtnemer (of diens aangestelde) op het leveringsadres en in de lokalen van het leveringsadres moet worden vergoed door de opdrachtnemer.</p>
+<p>De opdrachtnemer (of diens aangestelde) meldt de schade direct aan de contactpersoon van de aanbesteder. De contactpersoon kan ook de schade melden aan de opdrachtnemer.</p>
+<p>Wanneer het bestelde goed of de bestelde goederen tenietgaan, vooraleer zij geleverd zijn, is de aanbesteder bevrijd van zijn verplichting tot betaling. De opdrachtnemer staat op eigen kost in voor de vervanging van de teniet gegane goederen.</p>
+<p>De opdrachtnemer is tevens aansprakelijk ten opzichte van de aanbestedende overheid voor schadevergoedingen aan derden wegens vertraging in de levering van de goederen of wanneer de opdrachtnemer op een andere manier in gebreke blijft.</p>
+<p>De aansprakelijkheid van Samenaankoop AZO VZW ten aanzien van de individuele leden is beperkt zoals vermeld in het reglement van de VZW.</p>
+<p>Overeenkomstig artikel 47 Wet Overheidsopdrachten blijven de individuele leden die een beroep doen op deze raamovereenkomst verantwoordelijk voor de onderdelen van de plaatsings- en uitvoeringsprocedure die zij zelf verrichten.</p>
+<p>De individuele leden als afnemer handelen bij de plaatsing en uitvoering van deelopdrachten in eigen naam en voor eigen rekening. Zij zijn onder meer verantwoordelijk voor het organiseren van een eventuele nieuwe oproep tot mededinging, het toepassen van de in de raamovereenkomst vastgelegde toewijzingsmodaliteiten, het cascadesysteem, het nemen van de gunningsbeslissing, het sluiten van de deelopdracht en de verdere opvolging en uitvoering ervan.</p>
+<p>Elke deelopdracht die op basis van deze raamovereenkomst wordt geplaatst, doet uitsluitend een contractuele rechtsverhouding ontstaan tussen het individuele lid als afnemer en de gekozen opdrachtnemer. Samenaankoop AZO VZW is geen partij bij deze deelopdracht en is uitsluitend verantwoordelijk voor de plaatsing en het beheer van de raamovereenkomst als aankoopcentrale. Zij is bijgevolg niet aansprakelijk voor beslissingen, handelingen of nalatigheden die behoren tot de verantwoordelijkheid van de afnemer of van de opdrachtnemer in het kader van een deelopdracht.</p>
+<p>De opdrachtnemer zal Samenaankoop AZO VZW vrijwaren tegen alle eventuele aanspraken van de leden van AZO en van derden die rechtstreeks of onrechtstreeks voortvloeien uit (niet-limitatief):</p>
+<p>· de uitvoering van de raamovereenkomst;</p>
+<p>· de uitvoering van een deelopdracht;</p>
+<p>· een contractuele tekortkoming van de opdrachtnemer;</p>
+<p>· een fout of nalatigheid van de opdrachtnemer of zijn aangestelden;</p>
+<p>· een gebrek in de geleverde prestaties.</p>
+<p>Indien Samenaankoop AZO VZW wordt aangesproken wegens feiten of omstandigheden die behoren tot de verantwoordelijkheid van de opdrachtnemer, vrijwaart de betrokken opdrachtnemer Samenaankoop AZO VZW integraal voor alle aanspraken, veroordelingen, schade, kosten, interesten en uitgaven die daarvan het gevolg zijn, met inbegrip van de redelijke kosten van juridische bijstand, advocatenkosten en gerechtskosten, voor zover deze aanspraken voortvloeien uit een aan de opdrachtnemer toerekenbare tekortkoming, fout of nalatigheid.</p>
+<p>Partijen sluiten, in zoverre wettelijk mogelijk, onder meer andere aansprakelijkheid dan diegene voorzien in deze overeenkomst uit, zodat Partijen elkaars respectievelijke hulppersonen (onder meer bestuurders, werknemers en/of aangestelden) niet buitencontractueel kunnen aanspreken en/of betrekken bij geschillen over de totstandkoming, uitvoering, interpretatie of beëindiging van deze overeenkomst.</p>
+<p>Onverminderd het voorgaande, erkennen en verklaren Partijen in het algemeen dat zij, in zoverre wettelijk mogelijk, enkel elkaar en niet elkaars respectievelijke vertegenwoordigers of hulppersonen (onder meer bestuurders, werknemers en/of aangestelden) kunnen aanspreken, in het kader van de totstandkoming, uitvoering of beëindiging van deze overeenkomst.</p>
+<p>De toepassing van artikel 6.3, §2 van boek 6 van het BW wordt expliciet uitgesloten, in zoverre wettelijk toegelaten.</p>
+<p class="verslag-h">GDPR</p>
+<p>Alle persoonsgegevens die de opdrachtnemer in het kader van deze opdracht verkrijgt van de aanbesteder of haar leden mogen niet gebruikt worden voor andere doeleinden dan uitdrukkelijk bepaald.</p>
+<p>Andere doeleinden kunnen zijn: direct marketing, reclame of doorverkoop van deze gegevens aan andere bedrijven.</p>
+<p>De opdrachtnemer is GDPR-compliant en verwerkt de verkregen persoonsgegevens enkel in de context van de bestellingen die gedaan zullen worden voor deze overheidsopdracht.</p>
+<p class="verslag-h">Geschillen</p>
+<p>De opdracht moet worden uitgevoerd en uitgelegd naar Belgisch recht. De partijen verbinden er zich toe hun verbintenissen te goeder trouw uit te voeren met het oog op het welslagen van de opdracht. Wanneer een betwisting of meningsverschil tussen de aanbesteder en de opdrachtnemer rijst, zullen de partijen in gemeenschappelijk overleg een oplossing nastreven.</p>
+<p>Voor alle geschillen omtrent de uitvoering van deze opdracht - dus vanaf de sluiting van de opdracht - is de Ondernemingsrechtbank Gent – afdeling Brugge bevoegd. Ieder deurwaardersexploot bestemd voor de aanbesteder moet worden betekend per adres van haar maatschappelijke zetel.</p>
+<p>De opdrachtnemer zal op eerste verzoek van de aanbesteder vrijwillig tussenkomen in elk geding of elke procedure dat met betrekking tot de opdracht aanhangig zou worden gemaakt tegen de aanbesteder, en zulks ongeacht voor welke rechtbank dit geschiedt.</p>
+<p class="verslag-h">Technische bepalingen</p>
+<p><strong>MINIMUMEISEN</strong></p>
+<ul><li><p><u><strong>Dispensers</strong></u><strong>:</strong> <br/>Een groot deel van het aantal potentiële afnemers heeft dispensers onder bruikleenovereenkomst van het merk Tork en Kimberly. <br/>Als de inschrijver geen Tork- of Kimberly-product aanbiedt, zullen deze dispensers door Tork of Kimberly verwijderd worden. <br/>Deze dispensers dienen om voor de hand liggende redenen snel vervangen te worden. <br/>Indien een inschrijver een gelijkwaardig alternatief wenst aan te bieden dienen de huidige dispensers vervangen te worden en dient mogelijke schade door het verwijderen van de dispensers hersteld te worden binnen de 30 dagen na sluiting van de opdracht. <br/>In het geval dit niet binnen deze periode kan plaatsvinden gelden volgende boeteclausules: 10,00 euro per dispenser per dag vanaf de 31ste dag na sluiting van de opdracht.</p></li></ul>
+<p><u><strong>Opgelet</strong></u><u>: </u><u>Enkel </u><u>indien</u><u> de verandering op uitdrukkelijke vraag van de afnemers gebeurt, kan de opdrachtnemer hiervoor een kost aanrekenen.</u><u> In alle andere gevallen draagt de opdrachtnemer de veranderingskosten</u><u>.</u></p>
+<ul><li><p><u><strong>Doseerapparatuur</strong></u><strong>:</strong> <br/>Hooggeconcentreerde producten en eenvoudige en overzichtelijke doseersystemen krijgen de voorkeur. </p></li></ul>
+<p>De inschrijver voegt bij zijn offerte een overzichtelijke en duidelijke beschrijving toe waarin wordt aangetoond hoe de aangeboden producten beantwoorden aan de vermelde criteria (beknopte beschrijving aangeboden doseerapparatuur).</p>
+<p>De opdrachtnemer verbindt er zich toe volgende diensten <u>zonder meerprijs</u> te verlenen i.v.m. het in bruikleen geven van doseerapparatuur:</p>
+<p>• in bruikleen geven van alle automatische doseerapparatuur voor de was- en vaatwasmachines;</p>
+<p>• in bruikleen geven van diverse doseersystemen voor de dagelijkse schoonmaak;</p>
+<p>• technische ondersteuning voor de volgende taken:</p>
+<p>- het periodiek onderhoud van alle in bruikleen gegeven doseertoestellen, d.w.z. controle van de vitale onderdelen. De inschrijver vermeldt de frequentie hiervan: regelmatig nazicht is een voordeel. Gratis herstelling of vervanging is eveneens een voordeel.</p>
+<p>- uitvoeren van de nodige handelingen om het functioneren te blijven waarborgen, mits er geen sprake is van onoordeelkundig gebruik.</p>
+<p>- het onderhoud van slangen en leidingen;</p>
+<p>- het nazicht van de leegsignalering;</p>
+<p>- het nameten en corrigeren van de doseringen.</p>
+<p><u>De inschrijver beperkt zijn beschrijving tot maximum 2</u><u> </u><u>x A4</u><u>-pagina’s</u><u>. </u></p>
+<p><br/>De opdrachtnemer voorziet minimaal één technische controle per jaar en een permanente technische ondersteuning in geval van problemen of storingen via een hulplijn. <br/>Alle toestellen in bruikleen blijven eigendom van de opdrachtnemer. Ze zijn uitsluitend bestemd voor gebruik met de producten van de opdrachtnemer of de producten, die door hem goedgekeurd zijn. <br/>De doseersystemen zijn gedekt door een volledige garantie, behalve wanneer de apparaten niet gebruikt worden overeenkomstig hun bestemming of in geval van schade te wijten aan o.a. moedwillige beschadiging, vandalisme, zonder dat deze opsomming limitatief is.</p>
+<p><strong>Gelieve in uw offerte </strong><strong>een verklaring op eer toe te voegen </strong><strong>dat U hiermee instemt op straffe van uitsluiting.</strong></p>
+<ul><li><p>Omwille van de gevraagde reactietijden en zeker te zijn van tijdige bevoorrading, ook van noodlevering, dient de inschrijver <u><strong>een eigen depot in Vlaanderen</strong></u> te hebben. De inschrijver bewijst aan de hand van leveringsrapporten dat dit depot al minstens 1 jaar operationeel is. </p></li><li><p>De inschrijver dient <u><strong>een eigen bureau in Vlaanderen</strong></u> te hebben van waaruit de <u>sales</u> wordt aangestuurd. Dit om een goede dienstverlening bij de leden te garanderen. </p></li><li><p>Gezien de omvang van dit dossier is het noodzakelijk dat de inschrijver over <u><strong>een salesteam van minstens </strong></u><u><strong>5 </strong></u><u><strong>personen</strong></u> beschikt die:</p></li><li><p>Nederlandstalig zijn (minimumniveau B2);</p></li><li><p>Fulltime in dienst zijn (freelancers worden niet in aanmerking genomen);</p></li><li><p>Minstens 1 jaar relevante ervaring (payroll);</p></li><li><p>Het team is in gans Vlaanderen actief – Dit wordt aangetoond aan de hand van cases.</p></li><li><p>De <u><strong>b</strong></u><u><strong>estelapplicatie</strong></u> is in het Nederlands. De inschrijver bezorgt een testlogin aan de aanbestedende overheid die haar in de mogelijkheid stelt om dit te controleren.</p></li><li><p>Alle <u><strong>info</strong></u><u><strong>rmatie</strong></u> omtrent de producten en toestellen, alsook de technische fiches moeten in het Nederlands zijn opgesteld.</p></li><li><p><u><strong>Facturatie</strong></u> aan de leden gebeurt verplicht via Peppol. De inschrijver toont aan hieraan te kunnen voldoen.</p></li><li><p>De <u><strong>k</strong></u><u><strong>lantendienst</strong></u> is Nederlandstalig. De inschrijver bezorgt een telefoonnummer en contactgegevens aan de aanbestedende overheid.</p></li><li><p><u><strong>Bestellen op dag X voor 12u = leveren op X+2</strong></u> (voorraadartikelen).</p></li><li><p><strong>VERPLICHTE </strong><strong>OPTIE</strong></p></li></ul>
+<p><strong>De inschrijver dient volgende v</strong><strong>erplichte optie</strong><strong> aan te bieden:</strong></p>
+<p>De aanbestedende overheid hecht heel veel belang aan de correcte en goede opleiding van het personeel bij de leden. Het overdragen van kennis door middel van training en advies is essentieel voor het bereiken van een kwalitatief hoogwaardig reinigingsresultaat en daling van het verbruik.</p>
+<p>Dit is bij uitstek een belangrijke meerwaarde die de opdrachtnemer moet bieden.</p>
+<p>De opleiding van het personeel bij de leden heeft betrekking op alle domeinen en onderwerpen, die verband houden met de opdracht. Zowel bij de opstart als tijdens de looptijd van de overeenkomst moeten opleidingen voorzien worden met de bedoeling de producten en materialen correct en efficiënt te gebruiken en naar continue verbetering te streven.</p>
+<p>De inschrijver moet opleiding van het onderhoudspersoneel bij de leden kunnen aanbieden.</p>
+<p>Deze opleidingen dienen:</p>
+<p>te gebeuren in de eigen landstaal (Nederlands – minimumniveau B2);</p>
+<p>door eigen personeel in loondienst met minimaal 1 jaar ervaring in de sector.</p>
+<p>De inschrijver voegt een rapport van een dergelijke opleiding bij zijn offerte als bewijs, alsook de CV’s van het personeel dat de opleidingen verzorgt.</p>
+<p><strong>OFFERTEFORMULIER</strong></p>
+<p><u><strong>MEDEDINGINGSPROCEDURE MET ONDERHANDELING VOOR DE LEVERING VAN </strong></u><u><strong>ONDERHOUDSPRODUCTEN</strong></u></p>
+<p><em>Belangrijk: dit formulier dient volledig te worden ingevuld.</em></p>
+<p><u><em>E-mailadres contactpersoon</em></u><em>: </em></p>
+<p><u>Natuurlijke persoon</u><br/>Ondergetekende (naam en voornaam):<br/>Hoedanigheid of beroep:<br/>Nationaliteit:<br/>Woonplaats (<u>volledig</u> adres):</p>
+<p>Telefoon:<br/>GSM:<br/>Fax:<br/>E-mail:<br/>Contactpersoon:</p>
+<p><strong>Ofwel (1)</strong></p>
+<p><u>Rechtspersoon</u><br/>De vennootschap (benaming, rechtsvorm):<br/>Nationaliteit:<br/>met maatschappelijke zetel te (<u>volledig</u> adres):</p>
+<p>Telefoon:<br/>GSM:<br/>Fax:<br/>E-mail:<br/>Contactpersoon:</p>
+<p>vertegenwoordigd door de ondergetekende(n):<br/>(De gemachtigden voegen bij hun offerte de authentieke of onderhandse akte waaruit hun bevoegdheid blijkt of een gewaarmerkt afschrift van hun volmacht; zij kunnen zich ook beperken tot een verwijzing naar het nr. van de bijlage van het Belgisch Staatsblad waarin hun bevoegdheden zijn bekendgemaakt.)</p>
+<p><strong>Ofwel (1)</strong></p>
+<p><u>Combinatie van ondernemers (met inbegrip van de tijdelijke maatschap)</u><br/><br/>Naam en voornaam hetzij handelsnaam en rechtsvorm:</p>
+<p>Hoedanigheid of beroep:</p>
+<p>Nationaliteit:</p>
+<p>Adres hetzij zetel:</p>
+<p>Telefoon:</p>
+<p>GSM:</p>
+<p>E-mail:</p>
+<p>Contactpersoon:</p>
+<p>Naam en voornaam hetzij handelsnaam en rechtsvorm:</p>
+<p>Hoedanigheid of beroep:</p>
+<p>Nationaliteit:</p>
+<p>Adres hetzij zetel:</p>
+<p>Telefoon:</p>
+<p>GSM:</p>
+<p>E-mail:</p>
+<p>Contactpersoon:</p>
+<p>Deze gegevens telkens te vermelden voor elk van de deelnemers aan de combinatie.</p>
+<p>De combinatie die wordt vertegenwoordigd door één van de deelnemers, met name:</p>
+<p><br/>VERBINDT OF VERBINDEN ZICH TOT UITVOERING VAN DE AANNEMING OVEREENKOMSTIG DE BEPALINGEN EN VOORWAARDEN VAN HET BESTEK VOOR BOVENGENOEMDE OVERHEIDSOPDRACHT:</p>
+<p>tegen de eenheidsprijzen vermeld in de catalogus in bijlage bij de offerte.</p>
+<p><u>Algemene inlichtingen</u></p>
+<p>Inschrijvingsnr. bij de RSZ.:<br/>Ondernemingsnummer (alleen in België):<br/>De inschrijver is een micro onderneming : JA / NEE <em>(doorhalen wat niet van toepassing is)</em> <strong>(2)</strong></p>
+<p>De inschrijver is een kleine onderneming : JA / NEE <em>(doorhalen wat niet van toepassing is)</em> <strong>(2)</strong></p>
+<p>De inschrijver is een middelgrote onderneming : JA / NEE <em>(doorhalen wat niet van toepassing is)</em> (<strong>2</strong>)</p>
+<p><u>Onderaannemers</u></p>
+<p>Er zullen onderaannemers worden aangewend: JA / NEE <em>(doorhalen wat niet van toepassing is)</em></p>
+<p>Gedeelte van de opdracht dat in onderaanneming wordt gegeven:</p>
+<p>Volgende onderaannemers zullen hiervoor worden aangewend:</p>
+<p><u>Personeel</u></p>
+<p>Er wordt personeel tewerkgesteld dat onderworpen is aan de socialezekerheidswetgeving van een andere lidstaat van de Europese Unie:</p>
+<p>JA / NEE <em>(doorhalen wat niet van toepassing is)</em></p>
+<p>Het betreft volgende EU-lidstaat:</p>
+<p><u>Betalingen</u></p>
+<p>De betalingen zullen geldig worden uitgevoerd door overschrijving op volgende rekening (IBAN/BIC) ................................................ van de financiële instelling ................................. geopend op naam van ................................. .</p>
+<p><u>Bij de offerte te voegen documenten</u></p>
+<p>Bij deze offerte zijn eveneens gevoegd:</p>
+<p>- de documenten die het bestek verplicht over te leggen;</p>
+<p>- de modellen, monsters en andere inlichtingen, die het bestek verplicht over te leggen.</p>
+<p>Gedaan te .....................................................................................................................................</p>
+<p>De ................................................................................................................................................</p>
+<p>De inschrijver,</p>
+<p>Naam en voornaam: .......................................................................................................................</p>
+<p>Functie: .........................................................................................................................................</p>
+<p><u>Belangrijke nota</u></p>
+<p>Er mag geen beroep worden aangetekend tegen mogelijke vormgebreken, fouten of leemten (artikel 81 en 82 van het koninklijk besluit van 18 april 2017).</p>
+<p><u><strong>(1) Doorhalen wat niet van toepassing is</strong></u></p>
+<p><u><strong>(2)</strong></u> In de zin van de aanbeveling van de Europese Commissie van 6 mei 2003 betreffende de definitie van micro-, kleine en middelgrote ondernemingen.</p>
+<p>Micro-ondernemingen : een onderneming met minder dan 10 werknemers en met een jaaromzet en/of jaarlijks balanstotaal van niet meer dan 2 miljoen euro.</p>
+<p>Kleine ondernemingen: een onderneming met minder dan 50 werknemers en met een jaaromzet en/of jaarlijks balanstotaal van niet meer dan 10 miljoen euro.</p>
+<p>Middelgrote ondernemingen: ondernemingen die micro noch klein zijn en met minder dan 250 personen werknemers en een jaaromzet van niet meer dan 50 miljoen euro en/of een jaarlijks balanstotaal van niet meer dan 43 miljoen euro.</p>
+        </div>
+
+        <p class="verslag-h"><strong><u>Specifieke dossiergegevens</u></strong></p>
+        <table class="doc-table">
+        <tbody>
+        <tr><td>Gunningsprocedure</td><td>Openbare procedure (artikel 36 Wet Overheidsopdrachten)</td></tr>
+        <tr><td>Taal van de overeenkomst</td><td>Nederlands</td></tr>
+        <tr><td>Referentienummer</td><td>${fill(d.project_ref,"referte")}</td></tr>
+        <tr><td>Maximale looptijd</td><td>${fill(d.looptijd_maanden,"48")} maanden</td></tr>
+        </tbody>
+        </table>
+
+        <p>${fill(d.contact_naam, CONTACT_DEFAULT.contact_naam)},</p>
+        <p>${fill(d.contact_functie, CONTACT_DEFAULT.contact_functie)}.</p>
+
         </div>
         ${docFooter()}
       `;
