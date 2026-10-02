@@ -9114,8 +9114,8 @@ var docx = (function(exports) {
 		constructor(options) {
 			super("w:pBdr");
 			if (options.top) this.root.push(createBorderElement("w:top", options.top));
-			if (options.bottom) this.root.push(createBorderElement("w:bottom", options.bottom));
 			if (options.left) this.root.push(createBorderElement("w:left", options.left));
+			if (options.bottom) this.root.push(createBorderElement("w:bottom", options.bottom));
 			if (options.right) this.root.push(createBorderElement("w:right", options.right));
 			if (options.between) this.root.push(createBorderElement("w:between", options.between));
 		}

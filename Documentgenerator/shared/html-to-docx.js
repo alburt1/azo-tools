@@ -70,7 +70,7 @@
       allCaps: !!fmt.allCaps,
     };
     if (fmt.underline) props.underline = {};
-    if (fmt.highlight) props.shading = { fill: fmt.highlight };
+    if (fmt.highlight) props.shading = { type: docx.ShadingType.CLEAR, color: "auto", fill: fmt.highlight };
     return props;
   }
 
@@ -98,6 +98,13 @@
   /* Loopt over de inline-kinderen van een blok-element (p, li, td, ...) en
      bouwt een platte lijst van TextRun/ImageRun, met opgestapelde opmaak
      (bold/underline/italic/superscript/highlight) via tag- en klasse-naam. */
+  // Ids van de echte Word-voetnoten die in het huidige document gedefinieerd zijn
+  // (gevuld door htmlStringToDocxBlocks vóór de conversie start). Een verwijzing
+  // naar een niet-gedefinieerde voetnoot zou een ongeldig Word-bestand geven, dus
+  // <sup class="fn-ref" data-fn="N"> wordt enkel een echte voetnootverwijzing als
+  // N hier in zit; anders valt het terug op een gewone superscript.
+  let ACTIVE_FOOTNOTE_IDS = null;
+
   function buildRuns(node, fmt, runs, topLevel) {
     fmt = fmt || {};
     if (topLevel === undefined) topLevel = true; // enkel de allereerste (paragraaf-niveau) aanroep telt als topLevel
@@ -139,6 +146,13 @@
         const run = makeImageRun(child);
         if (run) runs.push(run);
         return;
+      }
+      if (tag === "sup" && cls.indexOf("fn-ref") !== -1 && ACTIVE_FOOTNOTE_IDS) {
+        const fnId = parseInt(child.getAttribute("data-fn"), 10);
+        if (!isNaN(fnId) && ACTIVE_FOOTNOTE_IDS.has(fnId)) {
+          runs.push(new docx.FootnoteReferenceRun(fnId));
+          return;
+        }
       }
       if (tag === "sup") {
         buildRuns(child, Object.assign({}, fmt, { superScript: true, size: Math.round((fmt.size || 20) * 0.72) }), runs, false);
@@ -298,9 +312,14 @@
 
     const props = { heading: headingLevel, spacing: LINE_115 };
     if (cls.indexOf("bijlage-h") !== -1) {
+      // Volledig omkaderd (niet enkel een lijn erboven) — dezelfde groene
+      // rand aan alle 4 kanten, met voldoende "space" zodat het net als de
+      // andere groene kaders (bv. SELECTIELEIDRAAD) oogt. Blijft wel een
+      // echte Word-kop (HEADING_1) zodat de inhoudsopgave/navigatie werkt.
+      const boxBorder = { style: "single", size: 8, color: COLOR.green, space: 8 };
       props.pageBreakBefore = true;
-      props.border = { top: ACCENT_BORDER_THIN };
-      props.spacing = Object.assign({}, LINE_115, { before: PT(14) }); // ruimte tussen lijn en titel
+      props.border = { top: boxBorder, right: boxBorder, bottom: boxBorder, left: boxBorder };
+      props.spacing = Object.assign({}, LINE_115, { before: PT(14), after: PT(14) });
     }
     if (disableNumbering) props.numbering = false;
     return new docx.Paragraph(Object.assign({ children: runs }, props));
@@ -495,7 +514,7 @@ function cellToBlocks(td, ctx){
             children: cellChildren,
             columnSpan: colspan > 1 ? colspan : undefined,
             width: cellWidthFromStyle(td) || (equalColPct ? { size: equalColPct, type: docx.WidthType.PERCENTAGE } : undefined),
-            shading: isHeader ? { fill: COLOR.tableHeaderBg } : undefined,
+            shading: isHeader ? { type: docx.ShadingType.CLEAR, color: "auto", fill: COLOR.tableHeaderBg } : undefined,
             borders: isDataTable ? undefined : DOCX_TABLE_NO_BORDERS,
             verticalAlign: docx.VerticalAlign.TOP,
             // CSS: table.doc-table th/td{ padding:5pt 7pt; } (1pt = 20 twips) —
@@ -603,6 +622,8 @@ function cellToBlocks(td, ctx){
         return;
       }
       if (tag === "aside" && cls.indexOf("doc-footnotes") !== -1) {
+        // Echte voetnoten: Word zet die zelf onderaan elke pagina — hier dus niets uitschrijven.
+        if (el.getAttribute("data-real-footnotes")) return;
         out.push(...convertFootnotes(el));
         return;
       }
@@ -638,6 +659,23 @@ function cellToBlocks(td, ctx){
             }) ] }) ],
           }));
           // ademruimte na de box
+          out.push(new docx.Paragraph({ spacing: { before: 0, after: PT(6) }, children: [new docx.TextRun("")] }));
+          return;
+        }
+        if (clsDiv.indexOf("green-box") !== -1) {
+          // Groen omkaderd kader (bv. de "SELECTIELEIDRAAD"-titel) — zelfde
+          // opzet als red-box, maar met de AZO-groene rand i.p.v. rood.
+          const innerBlocks = htmlNodeToBlocks(el, ctx);
+          const cellChildren = innerBlocks.length ? innerBlocks : [new docx.Paragraph({ children: [new docx.TextRun("")] })];
+          const greenBorder = { style: "single", size: 10, color: COLOR.green };
+          out.push(new docx.Table({
+            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+            borders: { top: greenBorder, bottom: greenBorder, left: greenBorder, right: greenBorder, insideHorizontal: greenBorder, insideVertical: greenBorder },
+            rows: [ new docx.TableRow({ children: [ new docx.TableCell({
+              margins: { top: 140, bottom: 140, left: 160, right: 160 },
+              children: cellChildren,
+            }) ] }) ],
+          }));
           out.push(new docx.Paragraph({ spacing: { before: 0, after: PT(6) }, children: [new docx.TextRun("")] }));
           return;
         }
@@ -681,7 +719,33 @@ function cellToBlocks(td, ctx){
   function htmlStringToDocxBlocks(html, opts) {
     const wrapper = global.document.createElement("div");
     wrapper.innerHTML = html;
-    return htmlNodeToBlocks(wrapper, opts || {});
+    opts = opts || {};
+
+    // Echte voetnoten vooraf verzamelen (de verwijzingen staan in de tekst vóór
+    // de definities onderaan). Enkel als de aanroeper een footnotesOut-object
+    // meegeeft — anders kunnen we ze niet in het document plaatsen en blijft het
+    // bij de oude weergave.
+    ACTIVE_FOOTNOTE_IDS = null;
+    if (opts.footnotesOut) {
+      const ids = new Set();
+      wrapper.querySelectorAll("aside[data-real-footnotes] li[data-fn]").forEach((li) => {
+        const id = parseInt(li.getAttribute("data-fn"), 10);
+        if (isNaN(id)) return;
+        const runs = [];
+        buildRuns(li, { size: HALFPT(8.5) }, runs);
+        if (runs.length === 0) return;
+        ids.add(id);
+        opts.footnotesOut[id] = {
+          children: [new docx.Paragraph({ children: runs, spacing: { after: PT(2) } })],
+        };
+      });
+      ACTIVE_FOOTNOTE_IDS = ids;
+    }
+    try {
+      return htmlNodeToBlocks(wrapper, opts);
+    } finally {
+      ACTIVE_FOOTNOTE_IDS = null;
+    }
   }
 
   global.AZO_HTML_TO_DOCX = { htmlStringToDocxBlocks, dataUriToUint8, PT, HALFPT, COLOR };

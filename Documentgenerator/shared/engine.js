@@ -110,8 +110,10 @@ const DOCUMENT_CSS = `
 
   .verslag-h{ font-weight:bold; font-size:12.5pt; margin:16pt 0 6pt; color:#4c7527; page-break-after:avoid; }
   .verslag-sub{ font-weight:normal; text-decoration:underline; font-size:11pt; color:#4c7527; margin:12pt 0 4pt; page-break-after:avoid; }
-  .bijlage-h{ font-weight:bold; font-size:12pt; margin:26pt 0 10pt; padding-top:14pt; border-top:1pt solid #7db73f; color:#4c7527; page-break-before:always; page-break-after:avoid; }
-  .doc-title-h3{ font-weight:bold; font-size:11pt; margin:0 0 14pt; text-align:center; }
+  .bijlage-h{ font-weight:bold; font-size:12pt; margin:26pt 0 10pt; padding:10pt 12pt; border:1.25pt solid #7DB73F; border-radius:2px; color:#4c7527; page-break-before:always; page-break-after:avoid; }
+  .doc-title-h3{ font-weight:bold; font-size:11pt; margin:0; text-align:center; }
+  .green-box{ border:1.25pt solid #7DB73F; border-radius:2px; padding:8pt 12pt; margin:8pt 0 14pt; }
+  .green-box p{ margin:0; }
   /* Automatisch gedetecteerde tussentitels (zie applyAutoHeadingPreviewStyles
      in engine.js) — zelfde groene stijl als de echte Word-Heading 2/3/4 in
      het gedownloade document, puur voor visuele gelijkenis in de preview. */
@@ -273,7 +275,7 @@ function percelenBedragZin(d, fallback){
   // euro excl. btw voor perceel 2" — of, zonder percelen, gewoon het
   // algemene bedrag.
   const list = (d.percelen || []).filter(p => (p.naam||"").trim());
-  if(!list.length) return fill(fallback, "9.000.000,00 euro excl. btw");
+  if(!list.length) return fill(fallback, "9.000.000,00 euro excl. BTW");
   const groups = [];
   const byBedrag = {};
   list.forEach((p, i) => {
@@ -286,7 +288,7 @@ function percelenBedragZin(d, fallback){
     const nummers = nums.length === 1
       ? `perceel ${nums[0]}`
       : `de percelen ${nums.slice(0, -1).join(", ")} en ${nums[nums.length - 1]}`;
-    return `${bedrag} excl. btw voor ${nummers}`;
+    return `${bedrag} excl. BTW voor ${nummers}`;
   });
   return zinnen.length === 1 ? zinnen[0] : zinnen.slice(0, -1).join(", ") + " en " + zinnen[zinnen.length-1];
 }
@@ -1134,21 +1136,85 @@ return {
         {key:"deadline_datum", label:"Limietdatum aanvragen tot deelneming", type:"text", placeholder:"bv. 3 augustus 2026"},
         {key:"deadline_uur", label:"Limietuur", type:"text", placeholder:"bv. 07.00 u"},
       ]},
+      {name:"Selectiecriteria — Economische en financiële draagkracht", fields:[
+        {key:"omzet_minimum", label:"Minimale jaaromzet in de producten van deze opdracht (per boekjaar)", type:"text", placeholder:"bv. 3.500.000,00 euro", hint:"De ratio's voor de financiële gezondheid (solvabiliteit, liquiditeit, eigen vermogen, bedrijfskapitaal, overgedragen verlies) staan standaard al in het document."},
+        {key:"omzet_afwijking", label:"Afwijking per perceel (optioneel)", type:"textarea", placeholder:"bv. Voor perceel 4 bedraagt dit minstens 2.000.000,00 euro per jaar."},
+        {key:"selectie_eco_extra", label:"Bijkomende economische/financiële criteria (optioneel)", type:"table", addLabel:"+ Criterium toevoegen", columns:[
+          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. DOORSELECTIE: BEPERKING VAN HET AANTAL KANDIDATEN VOLGENS ARTIKEL 79 WET OVERHEIDSOPDRACHTEN"},
+          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Enkel de 3 kandidaten met de gemiddeld hoogste omzet zullen geselecteerd worden."},
+        ]},
+      ]},
+      {name:"Selectiecriteria — Technische en beroepsbekwaamheid", fields:[
+        {key:"selectie_tech", label:"Technische en beroepsbekwaamheid", type:"table", defaultRows:3, addLabel:"+ Criterium toevoegen", columns:[
+          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. Teneinde zijn technische bekwaamheid aan te tonen zal de inschrijver aantonen dat hij ervaring heeft met gelijkaardige opdrachten (het leveren van ...)."},
+          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Gelijkaardige referenties in de loop van de laatste 3 jaar waarvan:\n- minstens 1 met een minimale waarde van ... euro excl. btw;\n\nHiertoe voegt de inschrijver volgende zaken bij de aanvraag tot deelneming:\n- Naam opdrachtgever;\n- Looptijd van de opdracht;\n- Waarde van de opdracht;\n- Plaats van de opdracht;\n- Aard van de opdracht."},
+        ]},
+      ]},
+      {name:"Gunningscriteria (indicatief)", fields:[
+        {key:"gunningscriteria_lijst", label:"Gunningscriteria — worden ten indicatieven titel meegegeven", type:"table", defaultRows:4, addLabel:"+ Gunningscriterium toevoegen", columns:[
+          {key:"omschrijving", label:"Beschrijving", wide:true, placeholder:"bv. Prijs"},
+        ]},
+      ]},
       {name:"Bijzondere toelichting", fields:[
         {key:"bijdrage_percentage", label:"Administratieve bijdrage (%)", type:"text", placeholder:"bv. 3"},
       ]},
     ],
     render(d){
+      // Echte voetnoten: <sup class="fn-ref" data-fn="N"> in de tekst; de teksten staan
+      // onderaan in <aside data-real-footnotes>. In Word worden dat echte voetnoten.
+      const fn = (n) => `<sup class="fn-ref" data-fn="${n}">${n}</sup>`;
+      const percelenNamen = (d.percelen||[]).filter(p => (p.naam||"").trim());
+      const aantalPercelen = percelenNamen.length;
+
+      // Eén ingevuld veld ("voorwerp, korte vorm") komt op meerdere plaatsen in lopende tekst
+      // terecht: met hoofdletter bij "'Leveren van ...'", met kleine letter bij "...voor het leveren van ...".
+      const ucf = (s) => { s = (s||"").trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; };
+      const UC = (s) => (s||"").toUpperCase();
+      // Voor Bijlage A (zinsvorm, enkel eerste letter hoofdletter) i.p.v. het
+      // titelblad (dat juist VOLLEDIG in hoofdletters moet staan).
+      const sentenceCase = (s) => ucf((s||"").toLowerCase());
+      const lcf = (s) => { s = (s||"").trim(); return (s.length > 1 && !/^[A-Z]{2,}/.test(s)) ? s.charAt(0).toLowerCase() + s.slice(1) : s; };
+
+      // Standaard ratio's financiële gezondheid — vast onderdeel van elke selectieleidraad.
+      const ratioBlokHtml = `
+            <p>De volgende ratio's zullen onderzocht worden en dienen minstens de waarde tussen haakjes te bereiken:</p>
+            <p><strong>Criterium 1: solvabiliteit (&gt; 20%):</strong></p>
+            <p>Berekend volgens de volgende formule: (10/15) / (10/49).</p>
+            <p><strong>Criterium 2: liquiditeit in ruime zin (&gt; 1):</strong></p>
+            <p>Berekend volgens de volgende formule: ((3) + (40/41) + (50/53) + (490/1)) / ((42/48) + (492/3)).</p>
+            <p><strong>Criterium 3: eigen vermogen (positief)</strong></p>
+            <p>Rubriek (10/15) van de balans.</p>
+            <p><strong>Criterium 4: bedrijfskapitaal netto (positief)</strong></p>
+            <p>Berekend volgens de volgende formule: (29/58) – (29) – (42/48) – (492/3)</p>
+            <p><strong>Criterium 5: overgedragen verlies (lager dan 50% van Kapitaal + Reserves)</strong></p>
+            <p>Berekend volgens de volgende formule: (141) (&lt; 50% van (10+13))</p>
+            <p>De ondernemingen waarvan niet elk van de drie laatste jaarrekeningen aan <u>minstens twee van deze ratio's</u> voldoet, zullen niet geselecteerd worden.</p>`;
+
+      const extraEcoRowsHtml = (d.selectie_eco_extra||[])
+        .filter(r => (r.criterium||"").trim() || (r.minimum||"").trim())
+        .map((r,i) => `<tr><td>${i+3}.</td><td>${nl2br(r.criterium||"")||fill("","Selectiecriterium")}</td><td>${nl2br(r.minimum||"")||fill("","Minimumvereiste")}</td></tr>`)
+        .join("");
+
+      const techRows = d.selectie_tech || [];
+      const techRowsHtml = techRows.length
+        ? techRows.map((r,i) => `<tr><td>${i+1}</td><td>${nl2br(r.criterium||"")||fill("","Selectiecriterium")}</td><td>${nl2br(r.minimum||"")||fill("","Minimumvereiste")}</td></tr>`).join("")
+        : `<tr><td colspan="3">${fill("","Nog geen technische selectiecriteria toegevoegd.")}</td></tr>`;
+
+      const gcRows = d.gunningscriteria_lijst || [];
+      const gcRowsHtml = gcRows.length
+        ? gcRows.map((r,i) => `<tr><td>${i+1}</td><td>${nl2br(r.omschrijving||"")||fill("","Gunningscriterium")}</td><td></td></tr><tr><td></td><td colspan="2"><em>Details worden nader gepreciseerd in het bijzonder bestek.</em></td></tr>`).join("")
+        : `<tr><td colspan="3">${fill("","Nog geen gunningscriteria toegevoegd.")}</td></tr>`;
+
       return `
         ${letterhead()}
         <div class="doc-body">
           <p><strong>Selectieleidraad</strong></p>
           <p><strong>VOOR DE RAAMOVEREENKOMST VOOR</strong></p>
-          <p><strong>${fill(d.opdracht_type, "LEVERINGEN")}</strong></p>
+          <p><strong>${fill(UC(d.opdracht_type), "LEVERINGEN")}</strong></p>
           <p><strong>met als voorwerp</strong></p>
-          <p><strong>${fill(d.opdracht_titel, "LEVERING VAN VERS VLEES EN CHARCUTERIE")}</strong></p>
+          <p><strong>${fill(UC(d.opdracht_titel), "LEVERING VAN VERS VLEES EN CHARCUTERIE")}</strong></p>
           <p><strong>Ref. ${fill(d.referte, "AZO 2026-Vlees")}</strong></p>
-          <p><strong>${fill(d.procedure, "MEDEDINGINGSPROCEDURE MET ONDERHANDELING")}</strong></p>
+          <p><strong>${fill(UC(d.procedure), "MEDEDINGINGSPROCEDURE MET ONDERHANDELING")}</strong></p>
           <p><strong>Aanbestedende overheid en ontwerper</strong></p>
           <p><strong><u>Samenaankoop AZO VZW</u></strong></p>
           <p><strong><u>Torhoutsestraat 338 te 8020 Oostkamp</u></strong></p>
@@ -1174,7 +1240,7 @@ return {
           <p><a href="#bijlage-c-verbintenis-terbeschikkingstelling-middelen">BIJLAGE C: VERBINTENIS TERBESCHIKKINGSTELLING MIDDELEN <span>19</span></a></p>
           <p><strong><u>VOORAFGAANDE BEPALINGEN</u></strong></p>
           <p><strong><u>Aanbestedende overheid en ontwerper</u></strong></p>
-          <p>Naam: Samenaankoop AZO vzw</p>
+          <p>Naam: Samenaankoop AZO VZW</p>
           <p>Adres: Torhoutsestraat 338, 8020 Oostkamp</p>
           <p>Contactpersoon: ${fill(d.project_contact_naam, "Mevrouw Charlotte Verschelden")}</p>
           <p>E-mail: ${fill(d.project_contact_email, "charlotte@samenaankoopazo.be")}</p>
@@ -1185,45 +1251,39 @@ return {
           <p>3. Koninklijk besluit van 14 januari 2013 tot bepaling van de algemene uitvoeringsregels van de overheidsopdrachten, en latere wijzigingen (hierna: ‘KB Uitvoering’);</p>
           <p>4. Wet van 17 juni 2013 betreffende de motivering, de informatie en de rechtsmiddelen inzake overheidsopdrachten, bepaalde opdrachten voor werken, leveringen en diensten en concessies, en latere wijzigingen (hierna: ‘Wet Rechtsbescherming’);</p>
           <p>5. Het Algemeen Reglement voor de Arbeidsbescherming (ARAB), Welzijnswet en Codex over het welzijn op het werk;</p>
-          <p>6. Wet van 11 februari 2013 tot vaststelling van sancties en maatregelen voor werkgevers van illegaal verblijvende onderdanen van derde landen.</p>
+          <p>6. Wet van 11 februari 2013 tot vaststelling van sancties en maatregelen voor werkgevers van illegaal verblijvende onderdanen van derde landen;</p>
           <p>7. De wet van 30 juli 2018 betreffende de bescherming van natuurlijke personen met betrekking tot de verwerking van persoonsgegevens, alsook de Verordening (EU) 2016/679 van het Europees Parlement en de Raad van 27 april 2016 betreffende de bescherming van natuurlijke personen in verband met de verwerking van persoonsgegevens en betreffende het vrije verkeer van die gegevens en tot intrekking van Richtlijn 95/46/EG (algemene verordening gegevensbescherming).</p>
           <p>Deze lijst is niet-limitatief. De kandidaten, respectievelijk de inschrijvers, respectievelijk de opdrachtnemers zijn gehouden alle op deze opdracht en procedure toepasselijke wet- en regelgeving na te leven.</p>
           <p><strong><u>Afwijkingen op het KB Uitvoering, aanvullingen en opmerkingen</u></strong></p>
           <p>${fill(d.afwijkingen, "Geen")}</p>
-          <p class="doc-title-h3">Selectieleidraad</p>
-          <p><strong>Referentie:</strong> ${fill(d.project_ref, "AZO 2026 — Vers vlees en charcuterie")}</p>
-          <p>Deze selectieleidraad geeft toelichting bij de selectiefase van de raamovereenkomst ‘${fill(d.opdracht_titel_klein, "Leveren van vers vlees en charcuterie")}’.</p>
+          <div class="green-box"><p class="doc-title-h3">SELECTIELEIDRAAD</p></div>
+          <p>Deze selectieleidraad geeft toelichting bij de selectiefase van de raamovereenkomst ‘${fill(ucf(d.opdracht_titel_klein), "Leveren van vers vlees en charcuterie")}’.</p>
           <p>Met deze selectieleidraad nodigt de aanbestedende overheid geïnteresseerde partijen uit om een aanvraag tot deelneming voor deze opdracht in te dienen. Deze selectieleidraad strekt er enkel toe geschikte kandidaten te selecteren die in de volgende fase van de gunningsprocedure uitgenodigd zullen worden om een offerte in te dienen op grond van het bestek dat enkel zal worden overgemaakt aan de geselecteerde kandidaten.</p>
-          <p>De selectieleidraad is, zonder enige volledigheid na te streven, enkel uitgegeven om de geïnteresseerde kandidaten de kans te geven een aanvraag tot deelneming in te dienen. De aanbestedende overheid behoudt zich het recht voor om in de loop van de procedure af te wijken van de bepalingen van onderhavige selectieleidraad, zonder evenwel afbreuk te doen aan de transparantie, de objectiviteit en de gelijke behandeling. De aanbestedende overheid zal dit enkel doen in de mate dat dit niet leidt tot enige concurrentievervalsing of discriminatie van de kandidaten. Daartoe zullen de kandidaten uitdrukkelijk gewezen worden op gebeurlijke afwijkingen, aanpassingen of aanvullingen.</p>
+          <p>De selectieleidraad is, zonder enige volledigheid na te streven, enkel uitgegeven om de geïnteresseerde kandidaten de kans te geven een aanvraag tot deelneming in te dienen. De aanbestedende overheid behoudt zich het recht voor om in de loop van de procedure af te wijken van de bepalingen van onderhavige selectieleidraad, zonder evenwel afbreuk te doen aan de transparantie, de objectiviteit en de gelijke behandeling.</p>
+          <p>De aanbestedende overheid zal dit enkel doen in de mate dat dit niet leidt tot enige concurrentievervalsing of discriminatie van de kandidaten. Daartoe zullen de kandidaten uitdrukkelijk gewezen worden op gebeurlijke afwijkingen, aanpassingen of aanvullingen.</p>
           <p>Deze selectieleidraad maakt integraal deel uit van de opdrachtdocumenten.</p>
           <p>Met opdrachtdocumenten worden de documenten bedoeld die op de opdracht toepasselijk zijn, met inbegrip van alle aanvullende en andere documenten waarnaar deze verwijzen.</p>
           <p class="verslag-h">Beschrijving van de opdracht</p>
-          <p class="verslag-sub">Voorwerp van deze opdracht</p>
-          <p>Raamovereenkomst voor het ${fill(d.opdracht_titel_klein, "leveren van vers vlees en charcuterie")}.</p>
-          <p class="verslag-sub">Informatie m.b.t de opdracht</p>
+          <p><strong>Voorwerp:</strong> Raamovereenkomst voor het ${fill(lcf(d.opdracht_titel_klein), "leveren van vers vlees en charcuterie")}.</p>
           <p><strong>Referentie:</strong> ${fill(d.project_ref, "AZO 2026 — Vers vlees en charcuterie")}</p>
-          <p>Deze opdracht '${fill(d.opdracht_titel_klein, "raamovereenkomst voor de levering van vers vlees en charcuterie")}' betreft de levering van volgende productgroepen aan de keukens van de voorzieningen van de leden van Samenaankoop AZO VZW:</p>
-          <ul>
-          <li><p>${fill(d.opdracht_titel_klein, "Vers vlees en charcuterie")}.</p></li>
-          </ul>
+          <p>Deze opdracht '${fill(lcf(d.opdracht_titel_klein), "leveren van vers vlees en charcuterie")}' betreft de levering van volgende productgroepen aan de leden van Samenaankoop AZO VZW:</p>
           ${hasPercelen(d)
-            ? `<p>De opdracht is opgedeeld in volgende percelen:</p><ul>${(d.percelen||[]).filter(p=>(p.naam||"").trim()).map((p,i)=>`<li><p>Perceel ${i+1}: '${esc(p.naam.trim())}'</p></li>`).join("")}</ul>`
-            : `<p>Gezien de grootte van de aankoopcentrale, de schaalvoordelen en teneinde de uniformiteit van de opdracht te garanderen wordt beslist om de opdracht niet in percelen te verdelen.</p>`}
-          <p>De looptijd van deze raamovereenkomst is vastgesteld op een periode van ${fill(d.looptijd, "1 jaar")}. Aansluitend op de bovenvermelde looptijd kan de opdracht 3 maal verlengd worden met een periode van telkens 1 jaar, op basis van artikel 57, tweede lid, van de Wet Overheidsopdrachten.</p>
+            ? `<ul>${(d.percelen||[]).filter(p=>(p.naam||"").trim()).map((p,i)=>`<li><p>Perceel ${i+1}: '${esc(p.naam.trim())}'</p></li>`).join("")}</ul>`
+            : `<ul><li><p>${fill(ucf(d.opdracht_titel_klein), "Vers vlees en charcuterie")}.</p></li></ul><p>Gezien de grootte van de aankoopcentrale, de schaalvoordelen en teneinde de uniformiteit van de opdracht te garanderen wordt beslist om de opdracht niet in percelen te verdelen.</p>`}
+          <p>De looptijd van deze raamovereenkomst is vastgesteld op een periode van ${fill(d.looptijd, "1 jaar")}${hasPercelen(d) ? " per perceel" : ""}. Aansluitend op de bovenvermelde looptijd kan de opdracht 3 maal verlengd worden met een periode van telkens 1 jaar, op basis van artikel 57, tweede lid, van de Wet Overheidsopdrachten${hasPercelen(d) ? " (per perceel afzonderlijk)" : ""}.</p>
           <p>Deze verlenging verloopt stilzwijgend, behoudens een andersluidende aangetekende zending van de aanbestedende overheid uiterlijk 1 maand vóór het verstrijken van de looptijd van de opdracht.</p>
-          <p>De opdracht gaat in op de datum zoals vermeld zal worden in de sluitingsbrief.</p>
-          <p>Het doel van deze opdracht is een partner te vinden, voor de bovenvermelde opdracht waarbij we kunnen bestellen tegen een goede prijs/kwaliteitsverhouding, met daarbij continue ondersteuning op het gebied van keuze ter optimalisatie van de te gebruiken producten.</p>
+          <p>De opdracht gaat${hasPercelen(d) ? ", per perceel," : ""} in op de datum zoals vermeld zal worden in de sluitingsbrief.</p>
           <p>De maximale bestelhoeveelheid onder de raamovereenkomst bedraagt:</p>
           ${hasPercelen(d)
-            ? `<ul>${(d.percelen||[]).filter(p=>(p.naam||"").trim()).map((p,i)=>`<li><p>${esc(fillPlain(p.max_bedrag,"9.000.000,00 euro"))} excl. btw voor perceel ${i+1};</p></li>`).join("")}</ul>`
-            : `<ul><li><p>${fill(d.bestelhoeveelheid_max, "9.000.000,00 euro")} excl. btw.</p></li></ul>`}
-          <p>Wanneer deze maximale bestelhoeveelheid is bereikt, zal de raamovereenkomst automatisch en van rechtswege ophouden te bestaan.</p>
-          <p>Dit betreft een raamopdracht met meerdere deelnemers volgens een cascadesysteem. Er zullen maximaal 3 deelnemers weerhouden worden. Meer informatie hieromtrent volgt in het bijzonder bestek.</p>
+            ? `<ul>${(d.percelen||[]).filter(p=>(p.naam||"").trim()).map((p,i)=>`<li><p>${esc(fillPlain(p.max_bedrag,"9.000.000,00 euro"))} excl. BTW voor perceel ${i+1};</p></li>`).join("")}</ul>`
+            : `<ul><li><p>${fill(d.bestelhoeveelheid_max, "9.000.000,00 euro")} excl. BTW.</p></li></ul>`}
+          <p>Wanneer deze maximale bestelhoeveelheid is bereikt, zal de raamovereenkomst automatisch en van rechtswege ophouden te bestaan.${fn(1)}</p>
+          <p>Dit betreft een raamopdracht met meerdere deelnemers volgens een cascadesysteem. Er zullen maximaal 3 deelnemers weerhouden worden${hasPercelen(d) ? " per perceel" : ""}. Meer informatie hieromtrent volgt in het bijzonder bestek.</p>
           <p>De opdrachtnemer zal verplicht zijn om de afzonderlijke afroepen telkens uit te voeren.</p>
           <p><strong>Leveringsplaats</strong>: Vlaanderen</p>
           <p class="verslag-h">Plaatsingsprocedure</p>
           <p>Overeenkomstig artikel 38, §1, 1° a) (onbeschikbaarheid van onmiddellijke oplossingen) van de wet van 17 juni 2016, wordt de opdracht gegund bij wijze van de mededingingsprocedure met onderhandeling.</p>
-          <p><strong>Motivatie</strong>: ${fill(d.motivatie_procedure, "omwille van de grote diversiteit van de producten en omwille van het feit dat dit moet afgestemd zijn op de leden van AZO wenst de aanbestedende overheid de mogelijkheid te voorzien om te onderhandelen")}.</p>
+          <p><strong>Motivatie</strong>: ${fill((d.motivatie_procedure||"").trim().replace(/\.+$/, ""), "omwille van de grote diversiteit van de producten en omwille van het feit dat dit moet afgestemd zijn op de leden van AZO wenst de aanbestedende overheid de mogelijkheid te voorzien om te onderhandelen")}.</p>
           <p>De aanbestedende overheid behoudt zich het recht voor de opdracht te gunnen op basis van de initiële inschrijvingen zonder onderhandelingen te voeren.</p>
           <p>De aanbestedende overheid behoudt zich het recht voor om eventuele onregelmatigheden te laten regulariseren, conform de toepassing van artikel 66, §3 Wet Overheidsopdrachten en artikel 76, §4 KB Plaatsing.</p>
           <p>De aanbestedende overheid behoudt zich het recht voor om te onderhandelen in fases, waarbij op basis van de gunningscriteria enkel verder wordt onderhandeld met de best gerangschikte inschrijvers.</p>
@@ -1243,7 +1303,7 @@ return {
           <p>- Geef aan of u voldoet aan de voorgeschreven selectiecriteria.</p>
           <p>- Zodra het volledige formulier ingevuld is, klikt u op 'Overzicht' onderaan de pagina. Het door u ingevulde UEA wordt weergegeven en kan worden gedownload in PDF en/of xml formaat zodat deze op elektronische wijze bij uw offerte kan worden gevoegd.</p>
           <p>Ondernemers kunnen het reeds in een vorige overheidsopdrachtenprocedure gebruikte UEA opnieuw gebruiken, mits zij bevestigen dat de daarin opgenomen gegevens nog steeds correct zijn.</p>
-          <p><strong><u>Het formulier voor aanvraag tot deelneming moet vergezeld zijn van volgende stukken:</u></strong></p>
+          <p><strong><u>Het formulier voor aanvraag tot deelneming moet vergezeld zijn van volgende stukken</u>${fn(2)}<u>:</u></strong></p>
           <ul>
           <li><p>Een ingevuld UEA voorleggen voor elke deelnemer van een combinatie van ondernemingen die optreedt als inschrijver;</p></li>
           <li><p>Een ingevuld UEA voorleggen voor elke onderaannemer of andere entiteit op wiens draagkracht de inschrijver beroep doet;</p></li>
@@ -1252,13 +1312,12 @@ return {
           <li><p>Voor de buitenlandse kandidaat moeten de certificaten inzake fiscale en sociale schulden en een certificaat inzake niet-faling aan de aanvraag tot deelneming toegevoegd worden;</p></li>
           <li><p>De bewijsstukken in het kader van de selectiecriteria;</p></li>
           <li><p>Het bewijs van handtekenbevoegdheid van de persoon die het indieningsrapport ondertekent;</p></li>
-          <li><p>Ingevulde bijlage A;</p></li>
+          <li><p>Ingevulde bijlage A${fn(3)};</p></li>
           <li><p>Ingevulde bijlage B;</p></li>
           <li><p>Ingeval van beroep op de draagkracht – een ingevulde bijlage C.</p></li>
           </ul>
           <div class="red-box">
-          <p>Een in te dienen stuk zal steeds aangeduid worden in een kader met het stuknummer en de bestandsnaam.</p>
-          <p>De inschrijver wordt verzocht om de bestandsnamen te gebruiken bij indiening van zijn aanvraag tot deelneming in e-Procurement. De bestandsnamen gebruiken steeds volgend formaat:</p>
+          <p>De inschrijver wordt verzocht om de correcte bestandsnamen te gebruiken bij indiening van zijn aanvraag tot deelneming in e-Procurement. De bestandsnamen gebruiken steeds volgend formaat:</p>
           <p><em>&lt;stuknummer&gt;_&lt;naam stuk&gt;_&lt;naam Inschrijver&gt;</em></p>
           <p>Indien de inschrijver een stuk verder opdeelt in aparte bestanden, nummert hij deze bv. 03a, 03b, 03c,…</p>
           </div>
@@ -1270,7 +1329,7 @@ return {
           <p>Om in aanmerking te komen voor selectie, dient de kandidaat, per perceel, te voldoen aan de hierna bepaalde minimale vereisten op het vlak van technische, financiële en beroepsbekwaamheid.</p>
           <p>Hij voegt de bewijsstukken voor deze criteria toe per perceel waarvoor hij een aanvraag tot deelneming indient.</p>
           <p><strong><u>Economische en financiële draagkracht van de kandidaat (selectiecriteria)</u></strong></p>
-          <p>Het UEA, waarmee de ondernemer verklaart dat hij voldoet aan de onderstaande selectiecriteria:</p>
+          <p>Het UEA, waarmee de ondernemer verklaart dat hij voldoet aan de onderstaande selectiecriteria${aantalPercelen > 1 ? ` voor de percelen 1 tot en met ${aantalPercelen} <strong>tenzij waar anders vermeld</strong>` : ""}:</p>
           <table class="doc-table">
 
           <tbody>
@@ -1282,18 +1341,14 @@ return {
           <tr>
           <td>1.</td>
           <td>Een verklaring betreffende de totale omzet van de onderneming, over <u>de laatste 3 gepubliceerde</u> boekjaren.</td>
-          <td>De omzet in de producten, die het voorwerp van deze opdracht uitmaken, bedraagt in <u>elk</u> van deze boekjaren minstens 18.000.000,00 euro per jaar.</td>
+          <td><p>De omzet in de producten, die het voorwerp van deze opdracht uitmaken, bedraagt in <u>elk</u> van deze boekjaren minstens ${fill(d.omzet_minimum, "bedrag, bv. 3.500.000,00 euro")} per jaar.</p>${(d.omzet_afwijking||"").trim() ? `<p>${nl2br(d.omzet_afwijking)}</p>` : ""}</td>
           </tr>
           <tr>
           <td>2.</td>
           <td>Financiële gezondheid.</td>
-          <td>De kandidaat leed geen bedrijfsverlies (post 9901 resultatenrekening) volgens de jaarrekeningen van de laatste 3 gepubliceerde boekjaren.</td>
+          <td>${ratioBlokHtml}</td>
           </tr>
-          <tr>
-          <td></td>
-          <td><strong>DOORSELECTIE: BEPERKING VAN HET AANTAL KANDIDATEN VOLGENS ARTIKEL 79 WET OVERHEIDSOPDRACHTEN</strong></td>
-          <td>Enkel de 3 kandidaten met de gemiddeld hoogste omzet over de laatste 3 gepubliceerde jaarrekeningen zullen geselecteerd worden.</td>
-          </tr>
+          ${extraEcoRowsHtml}
           </tbody>
           </table>
           <p class="verslag-sub">Technische en beroepsbekwaamheid van de kandidaat (selectiecriteria)</p>
@@ -1306,31 +1361,7 @@ return {
           <td>Selectiecriteria</td>
           <td>Minimumvereisten</td>
           </tr>
-          <tr>
-          <td>1</td>
-          <td>De inschrijver moet over de nodige vergunningen en/of erkenningen beschikken om handel te drijven in de goederen die aangeboden worden.</td>
-          <td>Attest van het FAVV.</td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>Teneinde zijn technische bekwaamheid aan te tonen zal de inschrijver aantonen dat hij ervaring heeft met gelijkaardige opdrachten (het leveren van vers vlees en charcuterie).</td>
-          <td><p>Gelijkaardige referenties in de zorgsector in België<sup class="fn-ref">1</sup> in de loop van de laatste 3 jaar waarvan: </p>
-          <p>- minstens 1 met een minimale waarde van 750.000,00 euro excl. btw per jaar; </p>
-          <p>- minstens 1 <u>andere</u> met een minimale waarde van 350.000,00 euro excl. btw per jaar;</p>
-          <p>- minstens 5 <u>andere </u>met een minimale waarde van 120.000,00 euro excl. btw per jaar. </p>
-          <p> </p>
-          <p>Hiertoe voegt de inschrijver volgende zaken bij de aanvraag tot deelneming: </p>
-          <p>- Naam opdrachtgever; </p>
-          <p>- Looptijd van de opdracht; </p>
-          <p>- Waarde van de opdracht; </p>
-          <p>- Plaats van de opdracht;  </p>
-          <p>- Aard van de opdracht.  </p></td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>De inschrijver kan leveren vanuit een depot in Vlaanderen.<sup class="fn-ref">2</sup></td>
-          <td>De inschrijver geeft het adres en telefoonnummer op van zijn depot in Vlaanderen.</td>
-          </tr>
+          ${techRowsHtml}
           </tbody>
           </table>
           <p class="verslag-h">Onderaannemers – beroep op de draagkracht</p>
@@ -1374,13 +1405,12 @@ return {
           </table>
           <p>De helpdesk e-Procurement kan gecontacteerd worden via een contactformulier of telefonisch – zie https://bosa.belgium.be/nl/services/helpdesk-e-procurement</p>
           <p>Er dient opgemerkt te worden dat het versturen van een aanvraag tot deelneming per e-mail niet aan deze voorwaarden voldoet. Daarom wordt het niet toegestaan op deze wijze een aanvraag tot deelneming in te dienen.</p>
-          <p>Door zijn aanvraag tot deelneming volledig of gedeeltelijk via elektronische middelen in te dienen, aanvaardt de kandidaat dat de gegevens die voortvloeien uit de werking van het ontvangstsysteem van zijn aanvraag tot deelneming worden geregistreerd.</p>
           <p>Meer informatie kan u vinden op volgende website: http://www.publicprocurement.be of via de e-Procurement helpdesk op het nummer: +32 (0)2 740 80 00.</p>
           <p><strong><u>De aanvraag tot deelneming kan niet ingediend worden op papier.</u></strong></p>
           <p class="verslag-h">Opening van de aanvragen tot deelneming</p>
           <p>De aanvragen tot deelneming worden elektronisch ingediend, er is geen openbare zitting.</p>
           <p class="verslag-h">Gunningscriteria</p>
-          <p>Volgende criteria zijn van toepassing bij de gunning van de opdracht.</p>
+          <p>Volgende criteria zijn van toepassing${aantalPercelen > 1 ? " op alle percelen" : ""} bij de gunning van de opdracht.</p>
           <p>Deze gunningscriteria worden meegegeven ten indicatieven titel. De aanbestedende overheid behoudt zich het recht voor de gunningscriteria verder uit te werken <u>of aan te passen</u> in het bijzonder bestek.</p>
           <table class="doc-table">
 
@@ -1388,49 +1418,14 @@ return {
           <tr>
           <td><strong>Nr.</strong></td>
           <td><strong>Beschrijving</strong></td>
-          <td><strong>Gewicht</strong></td>
-          </tr>
-          <tr>
-          <td>1</td>
-          <td>Prijs</td>
           <td></td>
           </tr>
-          <tr>
-          <td></td>
-          <td colspan="2"><em>Details worden nader gepreciseerd in het bijzonder bestek.</em></td>
-          </tr>
-          <tr>
-          <td>2</td>
-          <td>Smaaktest</td>
-          <td></td>
-          </tr>
-          <tr>
-          <td></td>
-          <td colspan="2"><em>Details worden nader gepreciseerd in het bijzonder bestek.</em></td>
-          </tr>
-          <tr>
-          <td>3</td>
-          <td>Staffelkorting</td>
-          <td></td>
-          </tr>
-          <tr>
-          <td></td>
-          <td colspan="2"><em>Details worden nader gepreciseerd in het bijzonder bestek.</em></td>
-          </tr>
-          <tr>
-          <td>4</td>
-          <td>Duurzaamheid</td>
-          <td></td>
-          </tr>
-          <tr>
-          <td></td>
-          <td colspan="2"><em>Details worden nader gepreciseerd in het bijzonder bestek.</em></td>
-          </tr>
+          ${gcRowsHtml}
           </tbody>
           </table>
           <p>Aan elk criterium werd een gewicht toegekend. Op basis van de afweging van al deze criteria en rekening houdende met het gewicht dat eraan werd toegekend, zal de opdracht gegund worden aan de inschrijver die de economisch voordeligste offerte, vanuit het oogpunt van de aanbestedende overheid, heeft ingediend.</p>
           <p class="verslag-h">Voorwaarden van het bestek</p>
-          <p><strong>Door deelname aan deze opdracht aanvaardt de indiener alle voorwaarden van dit bestek.</strong> Deze hebben altijd voorrang op zijn eigen algemene voorwaarden.</p>
+          <p><strong>Door deelname aan deze opdracht aanvaardt de indiener alle voorwaarden van deze selectieleidraad en de raamopdracht.</strong> Deze hebben altijd voorrang op zijn eigen algemene voorwaarden.</p>
           <p>Door het indienen van een aanvraag tot deelneming aanvaarden de kandidaten onvoorwaardelijk de inhoud van de selectieleidraad, de bijhorende opdrachtdocumenten en de invulling van de plaatsingsprocedure zoals deze in de selectieleidraad beschreven is. De kandidaten aanvaarden zelf door de bepalingen ervan gebonden te zijn.</p>
           <p>De schadebeperkingsplicht (art. 5.238 BW), de precontractuele informatieplicht (art. 5.16 BW) en het beginsel van behoorlijk burgerschap nopen geïnteresseerde ondernemingen tevens meteen zichtbare wettigheidsbezwaren aangaande deze opdracht, dit bestek en de gevolgde procedure schriftelijk en voor limietdatum voor indienen van de offertes te melden aan de aanbesteder.</p>
           <p class="verslag-h">Bijzondere toelichting</p>
@@ -1438,7 +1433,7 @@ return {
           <p>De entiteiten die potentieel deelnemen aan deze opdracht zijn de leden van Samenaankoop AZO VZW en potentiële deelnemers.</p>
           <p>De lijst van deze entiteiten zal samen met het bijzonder bestek meegedeeld worden.</p>
           <p>Mochten bepaalde entiteiten niet deelnemen aan het gegunde raamcontract, of mochten de verwachte volumes niet gehaald worden, dan kan Samenaankoop AZO VZW hiervoor bijgevolg geenszins aansprakelijk gesteld worden. Er kan dan ook geen enkele garantie gegeven worden op afnames.</p>
-          <p>De maximale raming van deze opdracht bedraagt ${percelenBedragZin(d, d.bestelhoeveelheid_max)}. De raming is gebaseerd op geschatte afnames. De geraamde jaaromzet is louter indicatief. De bedragen kunnen groter of kleiner zijn zonder dat de opdrachtnemer daarom gemachtigd is de voorwaarden van het contract te wijzigen of enige schadevergoeding te eisen.</p>
+          <p>De maximale raming${fn(4)} van deze opdracht bedraagt ${percelenBedragZin(d, d.bestelhoeveelheid_max)}. De raming is gebaseerd op geschatte afnames. De geraamde jaaromzet is louter indicatief. De bedragen kunnen groter of kleiner zijn zonder dat de opdrachtnemer daarom gemachtigd is de voorwaarden van het contract te wijzigen of enige schadevergoeding te eisen.</p>
           <p>De periode van 1 jaar begint voor het deelnemend lid pas te lopen op het ogenblik van het sluiten van het contract met de leverancier.</p>
           <p>Teneinde de kwalitatieve werking te kunnen vrijwaren zal de opdrachtnemer een administratieve bijdrage leveren ten belope van ${fill(d.bijdrage_percentage, "3")}% van de gerealiseerde omzet. Deze bijdrage dient ter bekostiging van de operationele werking enerzijds en anderzijds de ondersteuning van de sociale en klimaatgerichte doelen van de VZW.</p>
           <p>Het is niet toegestaan deze bijdrage apart aan de leden door te rekenen.</p>
@@ -1448,9 +1443,7 @@ return {
           <p class="verslag-h">Gunning en vragen</p>
           <p>De aanbestedende overheid is niet verplicht de opdracht te gunnen.</p>
           <p>Zij kan afzien van de procedure met een gemotiveerd besluit en die eventueel herbeginnen, desnoods op een andere wijze.</p>
-          <p>Vragen aangaande deze selectieleidraad dienen uitsluitend schriftelijk per email gesteld te worden tot ten laatste tien dagen vòòr de uiterste indieningsdatum.</p>
-          <p class="verslag-sub">Of alternatief indien gewerkt wordt met het Forum</p>
-          <p>Er kunnen over deze opdracht vragen worden gesteld tot uiterlijk 10 kalenderdagen voor de limietdatum voor het ontvangst van de aanvragen tot deelneming/offerte.</p>
+          <p>Er kunnen over deze opdracht vragen worden gesteld tot uiterlijk 10 kalenderdagen voor de limietdatum voor de ontvangst van de aanvragen tot deelneming/offerte.</p>
           <p>Vragen kunnen gesteld worden via het Forum. Het Forum is terug te vinden op het platform e-Procurement, op de pagina van deze opdracht, via de menu-optie 'Forum'.</p>
           <p><strong>Belangrijk:</strong></p>
           <ul>
@@ -1462,8 +1455,8 @@ return {
           <p>De gepubliceerde antwoorden in verband met deze opdracht maken integraal deel uit van de contractuele voorwaarden. De inschrijver wordt geacht hiervan kennis te hebben genomen en er rekening mee te hebben gehouden bij het opmaken van zijn aanvraag tot deelneming/offerte.</p>
           <p class="bijlage-h">BIJLAGE A: FORMULIER VOOR AANVRAAG TOT DEELNEMING</p>
           <p>AANVRAAG TOT DEELNEMING VOOR DE OPDRACHT MET ALS VOORWERP</p>
-          <p>“${fill(d.opdracht_titel, "LEVERING VAN VERS VLEES EN CHARCUTERIE")}”</p>
-          <p>Mededingingsprocedure met onderhandeling</p>
+          <p>“${fill(sentenceCase(d.opdracht_titel), "Levering van vers vlees en charcuterie")}”</p>
+          <p>${fill(sentenceCase(d.procedure), "Mededingingsprocedure met onderhandeling")}</p>
           <p><em>Belangrijk: dit formulier dient volledig te worden ingevuld.</em></p>
           <p><u>Natuurlijke persoon</u></p>
           <p>Ondergetekende (naam en voornaam):</p>
@@ -1561,7 +1554,7 @@ return {
           <p>(Naam van de onderaannemer of andere entiteit) </p>
           <p>(Adres) </p>
           <p>(KBO-nummer) </p>
-          <p><strong>Betreft: Overheidsopdracht ${fill(d.project_ref, "AZO 2026")} – ${fill(d.opdracht_titel_klein, "Vers vlees en charcuterie")}</strong></p>
+          <p><strong>Betreft: Overheidsopdracht ${fill(d.project_ref, "AZO 2026")} – ${fill(lcf(d.opdracht_titel_klein), "vers vlees en charcuterie")}</strong></p>
           <p><u>Verbintenis onderaannemer of andere entiteit tot terbeschikkingstelling van middelen in het kader van de selectiecriteria:</u></p>
           <p> </p>
           <p>(Naam onderaannemer of andere entiteit), rechtsgeldig vertegenwoordigd door de ondergetekende, (naam en functie van ondertekenaar), </p>
@@ -1578,11 +1571,12 @@ return {
           <p> </p>
           <p>(Naam ondertekenaar) </p>
           <p>(Functie) </p>
-          <aside class="doc-footnotes">
-
+          <aside class="doc-footnotes" data-real-footnotes="1">
           <ol class="fn-list">
-          <li><p>Gezien de reglementering rond vlees federale materie is en de zorgsector specifieke behoeftes heeft op vlak van voeding, is ervaring bij Belgische zorginstellingen vereist.</p></li>
-          <li><p>Aangezien het om voeding gaat, vindt de aanbestedende overheid het belangrijk dat er snel kan geleverd worden. Daarnaast hecht de aanbestedende overheid veel belang aan duurzaamheid.</p></li>
+          <li data-fn="1"><p>Behoudens de toepassing van artikel 38 e.v. KB Uitvoering.</p></li>
+          <li data-fn="2"><p>Gelet op het feit dat de mededingingsprocedure met onderhandeling een tweestapsprocedure is waarbij offertes enkel kunnen worden ontvangen en beoordeeld nadat de aanbestedende overheid het al dan niet voldoen aan de selectiecriteria heeft geverifieerd, verzoekt de aanbestedende overheid in toepassing van artikel 73, § 3, eerste lid Wet Overheidsopdrachten dan ook aan de kandidaten om, naast <strong>het UEA van de kandidaat</strong> (en desgevallend van de onderaannemers en/of derde entiteiten op wiens draagkracht een beroep wordt gedaan), tevens de <strong>onderliggende stukken inzake de uitsluitingsgronden en de kwalitatieve selectie</strong>, zoals hierboven bij de selectiecriteria vermeld, meteen bij de aanvraag tot deelneming te voegen.</p></li>
+          <li data-fn="3"><p>Indien hij deze op andere documenten maakt dan op het voorziene formulier (bijlage A), dan draagt hij de volle verantwoordelijkheid voor de volledige overeenstemming van de door hem aangewende documenten met het formulier.</p></li>
+          <li data-fn="4"><p>Behoudens de toepassing van artikel 38 KB Uitvoering.</p></li>
           </ol>
           </aside>
 
@@ -3773,9 +3767,14 @@ const STORAGE_OK = (() => {
 // een hersteld concept van een ander dossier zorgt hier net voor fouten, omdat
 // het overschrijven van al-ingevulde tekst foutgevoeliger is dan een blanco veld
 // invullen. Deze velden starten dus altijd leeg, ook na "Concept herstellen".
-const NEVER_PERSIST_KEYS = new Set([
+const NEVER_PERSIST_KEYS = new Set([            // tabelvelden -> altijd []
   "criteria", "criteria_economisch", "criteria_technisch",
   "selectie_eco", "selectie_tech", "gunningscriteria",
+  "selectie_eco_extra", "gunningscriteria_lijst",   // selectieleidraad
+  "selectiecriteria", "selectie_beroep",            // gunningsverslag / bestek openbare procedure
+]);
+const NEVER_PERSIST_TEXT_KEYS = new Set([        // tekstvelden -> altijd ""
+  "omzet_minimum", "omzet_afwijking",               // selectieleidraad
 ]);
 function stripNeverPersist(data){
   const copy = {...data};
@@ -3783,6 +3782,7 @@ function stripNeverPersist(data){
   // voor tabelvelden, dus een ontbrekende sleutel zou een fout veroorzaken.
   // Altijd expliciet op [] zetten, ook als de sleutel nog niet bestond.
   NEVER_PERSIST_KEYS.forEach(k => { copy[k] = []; });
+  NEVER_PERSIST_TEXT_KEYS.forEach(k => { copy[k] = ""; });
   return copy;
 }
 
@@ -4066,6 +4066,13 @@ function initPage(docId){
       </span>`;
     document.getElementById("draft-restore").addEventListener("click", () => {
       ENGINE_STATE.data = draft.data;
+      // Criteria-tabellen starten na herstel weer blanco — mét hun standaard lege rijen
+      // (defaultRows), zodat het formulier er hetzelfde uitziet als bij een nieuw document.
+      doc.sections.forEach(sec => sec.fields.forEach(f => {
+        if(f.type === "table" && f.defaultRows && NEVER_PERSIST_KEYS.has(f.key) && !(ENGINE_STATE.data[f.key]||[]).length){
+          ENGINE_STATE.data[f.key] = Array.from({length:f.defaultRows}, () => Object.fromEntries(f.columns.map(c=>[c.key,""])));
+        }
+      }));
       banner.hidden = true;
       renderForm(); renderPreview(); updateCompleteness(); updateWarnings();
     });
@@ -4549,7 +4556,7 @@ function buildSelectieleidraadCoverBlocks(coverHtml, d){
       width: { size: 100, type: docx.WidthType.PERCENTAGE },
       borders: { top: b, bottom: b, left: b, right: b, insideHorizontal: b, insideVertical: b },
       rows: [ new docx.TableRow({ children: [ new docx.TableCell({
-        shading: { fill },
+        shading: { type: docx.ShadingType.CLEAR, color: "auto", fill },
         margins: { top: opts.padY || 220, bottom: opts.padY || 220, left: 260, right: 260 },
         children: paragraphs,
       }) ] }) ],
@@ -4618,7 +4625,9 @@ function buildDocxDocument(doc, data){
   }
   const refValue = data.besteknummer || "";
   const isReport = doc.nativeHeadings === true; // verslagen + bestekken: echte Word-koppen/TOC
-  const bodyBlocks = AZO_HTML_TO_DOCX.htmlStringToDocxBlocks(bodyHtml, { nativeHeadings: isReport });
+  // Echte Word-voetnoten (indien het document er heeft): verzameld tijdens de conversie.
+  const footnotesOut = {};
+  const bodyBlocks = AZO_HTML_TO_DOCX.htmlStringToDocxBlocks(bodyHtml, { nativeHeadings: isReport, footnotesOut });
   if(bodyBlocks.length === 0) bodyBlocks.push(new docx.Paragraph({children:[new docx.TextRun("")]}));
   // (Geen losse "spacer"-alinea meer: die zat enkel aan het allereerste begin
   // van de tekst-flow en gaf dus alleen op pagina 1 extra ruimte na de
@@ -4650,6 +4659,7 @@ function buildDocxDocument(doc, data){
     creator: "AZO Documentgenerator",
     title: doc.title,
     features: { updateFields: true }, // laat Word de inhoudsopgave (en paginanummers) meteen bijwerken bij het openen
+    footnotes: footnotesOut,
     numbering: {
       config: [{
         reference: HEADING_NUM_REF,
