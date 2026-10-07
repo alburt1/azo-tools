@@ -458,3 +458,4 @@ button{font-family:inherit;}
 .pg-sub{margin-top:8px;}
 .pg-sub > label{display:block;font-size:11.5px;font-weight:700;margin-bottom:4px;}
 .pg-warn{background:#fff6dd;border:1px solid #f0d98a;color:#7a5b00;border-radius:var(--radius-sm);padding:8px 10px;font-size:11.5px;}
+.pg-aantal{margin-top:10px;font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;}.pg-aantal input{width:64px;padding:4px 6px;}.pg-aantal small{color:var(--ink-faint);}

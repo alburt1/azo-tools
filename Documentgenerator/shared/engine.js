@@ -301,9 +301,10 @@ function pgNumbersText(nums){
   return parts.length > 1 ? parts.slice(0,-1).join(", ") + " en " + parts[parts.length-1] : (parts[0] || "");
 }
 // Genormaliseerd beeld voor de render: { groups:[{label, v}], unassigned:[nrs], grouped:bool }
+function pgCount(d, pg){ return pgPercelenCount(d) || ((pg && pg.mode === "groepen" && pg.aantal) || 0); }
 function pgView(d, key, f){
-  const n = pgPercelenCount(d);
   let pg = d[key];
+  const n = pgCount(d, pg);
   if(!pg || !Array.isArray(pg.groups) || !pg.groups.length) pg = { mode:"alle", groups:[ f ? pgEmptyGroup(f) : { percelen:[], v:{} } ] };
   if(pg.mode !== "groepen" || n < 2){
     return { grouped:false, unassigned:[], groups:[{ label: n > 1 ? "Voor alle percelen:" : "", v: pg.groups[0].v || {} }] };
@@ -4417,15 +4418,24 @@ function renderPGroups(f, box){
   const d = ENGINE_STATE.data;
   if(!d[f.key] || !Array.isArray(d[f.key].groups) || !d[f.key].groups.length) d[f.key] = emptyFieldValue(f);
   const pg = d[f.key];
-  const n = pgPercelenCount(d);
-  const percelen = (d.percelen || []).filter(p => (p.naam||"").trim());
+  const n = pgCount(d, pg);
+  const heeftPercelenTabel = pgPercelenCount(d) > 0;
+  const percelen = heeftPercelenTabel
+    ? (d.percelen || []).filter(p => (p.naam||"").trim())
+    : Array.from({length:n}, () => ({naam:""}));
   box.innerHTML = "";
 
   // Percelen die niet (meer) bestaan uit de groepen halen
   pg.groups.forEach(g => { g.percelen = (g.percelen || []).filter(x => x <= n); });
 
-  if(n < 2){
-    // Zonder (meerdere) percelen valt er niets te kiezen: één set criteria.
+  const grouped = pg.mode === "groepen";
+
+  // Precies één perceel ingevuld: er valt niets te kiezen.
+  if(heeftPercelenTabel && n === 1){
+    const note = document.createElement("div");
+    note.className = "pg-choice";
+    note.innerHTML = `<div class="pg-choice-q">Er is slechts één perceel ingevuld — de criteria gelden voor dat perceel.</div>`;
+    box.appendChild(note);
     const card = document.createElement("div");
     card.className = "pg-card";
     renderPGSub(f, pg.groups[0].v, card);
@@ -4433,12 +4443,10 @@ function renderPGroups(f, box){
     return;
   }
 
-  const grouped = pg.mode === "groepen";
-
   // Keuze: zelfde voor alle percelen, of verschillend
   const choice = document.createElement("div");
   choice.className = "pg-choice";
-  choice.innerHTML = `<div class="pg-choice-q">Gelden deze criteria voor alle ${n} percelen?</div>`;
+  choice.innerHTML = `<div class="pg-choice-q">Gelden deze criteria voor alle percelen?</div>`;
   const opts = document.createElement("div");
   opts.className = "pg-choice-opts";
   [["alle", `Ja — hetzelfde voor alle percelen`], ["groepen", "Nee — verschilt per perceel of groep"]].forEach(([val, text]) => {
@@ -4449,11 +4457,28 @@ function renderPGroups(f, box){
     b.addEventListener("click", () => {
       pg.mode = val;
       if(val === "groepen" && pg.groups.length < 2) pg.groups.push(pgEmptyGroup(f));
+      if(val === "groepen" && !pgPercelenCount(d) && !pg.aantal) pg.aantal = 2;
       renderPGroups(f, box); pgChanged();
     });
     opts.appendChild(b);
   });
   choice.appendChild(opts);
+  if(grouped && !heeftPercelenTabel){
+    const aw = document.createElement("div");
+    aw.className = "pg-aantal";
+    aw.innerHTML = `<span>Hoeveel percelen heeft deze opdracht?</span>`;
+    const ai = document.createElement("input");
+    ai.type = "number"; ai.min = "2"; ai.max = "20"; ai.value = pg.aantal || 2;
+    ai.addEventListener("change", () => {
+      pg.aantal = Math.max(2, Math.min(20, parseInt(ai.value, 10) || 2));
+      renderPGroups(f, box); pgChanged();
+    });
+    aw.appendChild(ai);
+    const hn = document.createElement("small");
+    hn.textContent = " (of vul de percelen in bij punt 4 — dan wordt het aantal automatisch overgenomen)";
+    aw.appendChild(hn);
+    choice.appendChild(aw);
+  }
   box.appendChild(choice);
 
   if(!grouped){
@@ -4461,7 +4486,7 @@ function renderPGroups(f, box){
     card.className = "pg-card";
     const head = document.createElement("div");
     head.className = "pg-card-head";
-    head.textContent = `Voor alle percelen (1 tot en met ${n})`;
+    head.textContent = n > 1 ? `Voor alle percelen (1 tot en met ${n})` : "Voor alle percelen";
     card.appendChild(head);
     renderPGSub(f, pg.groups[0].v, card);
     box.appendChild(card);
