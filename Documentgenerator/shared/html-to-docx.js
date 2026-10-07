@@ -336,6 +336,11 @@
       Object.assign(props, { spacing: Object.assign({ before: PT(16), after: PT(6) }, LINE_115) });
       return { props, fmt: { bold: true, size: HALFPT(10.5), color: COLOR.headingDark } };
     }
+    if (cls.indexOf("pg-label") !== -1) {
+      // "Voor de percelen 1 en 2:" — vet, blijft bij de tabel eronder
+      Object.assign(props, { keepNext: true, spacing: Object.assign({ before: PT(12), after: PT(4) }, LINE_115) });
+      return { props, fmt: { bold: true, color: COLOR.headingDark } };
+    }
     if (cls.indexOf("verslag-sub") !== -1) {
       Object.assign(props, { spacing: Object.assign({ before: PT(12), after: PT(4) }, LINE_115) });
       return { props, fmt: { bold: true } };

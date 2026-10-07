@@ -109,6 +109,7 @@ const DOCUMENT_CSS = `
   .cover-center p{ margin:0 0 9pt; text-align:center; }
 
   .verslag-h{ font-weight:bold; font-size:12.5pt; margin:16pt 0 6pt; color:#4c7527; page-break-after:avoid; }
+  .pg-label{ font-weight:bold; color:#35521c; margin:12pt 0 4pt; page-break-after:avoid; }
   .verslag-sub{ font-weight:normal; text-decoration:underline; font-size:11pt; color:#4c7527; margin:12pt 0 4pt; page-break-after:avoid; }
   .bijlage-h{ font-weight:bold; font-size:12pt; margin:26pt 0 10pt; padding:10pt 12pt; border:1.25pt solid #7DB73F; border-radius:2px; color:#4c7527; page-break-before:always; page-break-after:avoid; }
   .doc-title-h3{ font-weight:bold; font-size:11pt; margin:0; text-align:center; }
@@ -262,6 +263,70 @@ function contactSentence(d){
 function hasPercelen(d){
   return Array.isArray(d.percelen) && d.percelen.filter(p => (p.naam||"").trim()).length > 0;
 }
+/* ---------------------------------------------------------------------
+   Criteria per perceel(groep) — veldtype "pgroups"
+   Datavorm: { mode:"alle"|"groepen", groups:[{ percelen:[1,2], v:{ <subveld>: waarde } }] }
+   - mode "alle": enkel groups[0] telt (geldt voor alle percelen)
+   - mode "groepen": elke groep krijgt zijn eigen set criteria voor de gekozen percelen
+   --------------------------------------------------------------------- */
+function emptyRowFor(columns){ return Object.fromEntries(columns.map(c => [c.key, ""])); }
+function emptySubValue(s){
+  if(s.type === "table") return s.defaultRows ? Array.from({length:s.defaultRows}, () => emptyRowFor(s.columns)) : [];
+  return s.default || "";
+}
+function pgEmptyGroup(f, percelen){
+  const v = {};
+  f.sub.forEach(s => { v[s.key] = emptySubValue(s); });
+  return { percelen: percelen || [], v };
+}
+function emptyFieldValue(f){
+  if(f.type === "table") return emptySubValue(f);
+  if(f.type === "pgroups") return { mode:"alle", groups:[pgEmptyGroup(f)] };
+  return f.default || "";
+}
+function pgPercelenCount(d){
+  return (d.percelen || []).filter(p => (p.naam||"").trim()).length;
+}
+// [1,2,3,5] -> "1 tot en met 3 en 5"; [1,2] -> "1 en 2"; [1,2,4] -> "1, 2 en 4"
+function pgNumbersText(nums){
+  const a = [...new Set(nums)].sort((x,y) => x-y);
+  const parts = [];
+  for(let i = 0; i < a.length;){
+    let j = i;
+    while(j+1 < a.length && a[j+1] === a[j]+1) j++;
+    if(j - i >= 2) parts.push(`${a[i]} tot en met ${a[j]}`);
+    else for(let k = i; k <= j; k++) parts.push(String(a[k]));
+    i = j + 1;
+  }
+  return parts.length > 1 ? parts.slice(0,-1).join(", ") + " en " + parts[parts.length-1] : (parts[0] || "");
+}
+// Genormaliseerd beeld voor de render: { groups:[{label, v}], unassigned:[nrs], grouped:bool }
+function pgView(d, key, f){
+  const n = pgPercelenCount(d);
+  let pg = d[key];
+  if(!pg || !Array.isArray(pg.groups) || !pg.groups.length) pg = { mode:"alle", groups:[ f ? pgEmptyGroup(f) : { percelen:[], v:{} } ] };
+  if(pg.mode !== "groepen" || n < 2){
+    return { grouped:false, unassigned:[], groups:[{ label: n > 1 ? "Voor alle percelen:" : "", v: pg.groups[0].v || {} }] };
+  }
+  const used = new Set();
+  const groups = pg.groups.map(g => {
+    const nums = (g.percelen || []).filter(x => x >= 1 && x <= n && !used.has(x));
+    nums.forEach(x => used.add(x));
+    const label = nums.length
+      ? `Voor ${nums.length === 1 ? "perceel" : "de percelen"} ${pgNumbersText(nums)}:`
+      : `Voor ${fill("", "de percelen (nog te kiezen)")}:`;
+    return { label, v: g.v || {}, empty: !nums.length };
+  });
+  const unassigned = [];
+  for(let i = 1; i <= n; i++) if(!used.has(i)) unassigned.push(i);
+  return { grouped:true, unassigned, groups };
+}
+function pgUnassignedHtml(view){
+  if(!view.grouped || !view.unassigned.length) return "";
+  const u = view.unassigned;
+  return `<p>${fill("", (u.length === 1 ? "Perceel " : "Percelen ") + pgNumbersText(u) + (u.length === 1 ? " is" : " zijn") + " nog niet aan een groep toegewezen")}</p>`;
+}
+
 function percelenLijstZin(d){
   // "Perceel 1: droge voeding en zuivel; Perceel 2: diepvriesproducten." als
   // doorlopende platte tekst-zin, opgebouwd uit de ingevulde percelen.
@@ -1137,18 +1202,27 @@ return {
         {key:"deadline_uur", label:"Limietuur", type:"text", placeholder:"bv. 07.00 u"},
       ]},
       {name:"Selectiecriteria — Economische en financiële draagkracht", fields:[
-        {key:"omzet_minimum", label:"Minimale jaaromzet in de producten van deze opdracht (per boekjaar)", type:"text", placeholder:"bv. 3.500.000,00 euro", hint:"De ratio's voor de financiële gezondheid (solvabiliteit, liquiditeit, eigen vermogen, bedrijfskapitaal, overgedragen verlies) staan standaard al in het document."},
-        {key:"omzet_afwijking", label:"Afwijking per perceel (optioneel)", type:"textarea", placeholder:"bv. Voor perceel 4 bedraagt dit minstens 2.000.000,00 euro per jaar."},
-        {key:"selectie_eco_extra", label:"Bijkomende economische/financiële criteria (optioneel)", type:"table", addLabel:"+ Criterium toevoegen", columns:[
-          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. DOORSELECTIE: BEPERKING VAN HET AANTAL KANDIDATEN VOLGENS ARTIKEL 79 WET OVERHEIDSOPDRACHTEN"},
-          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Enkel de 3 kandidaten met de gemiddeld hoogste omzet zullen geselecteerd worden."},
-        ]},
+        {key:"selectie_eco_g", label:"Economische en financiële draagkracht", type:"pgroups",
+          hint:"Met meerdere percelen kies je hierboven of de criteria voor alle percelen gelden of per perceel/groep verschillen. De ratio's voor de financiële gezondheid (solvabiliteit, liquiditeit, eigen vermogen, bedrijfskapitaal, overgedragen verlies) staan standaard al in het document.",
+          legacy: d => ({mode:"alle", groups:[{percelen:[], v:{omzet_minimum:d.omzet_minimum||"", extra:d.selectie_eco_extra||[]}}]}),
+          sub:[
+            {key:"omzet_minimum", label:"Minimale jaaromzet in de producten van deze opdracht (per boekjaar)", type:"text", placeholder:"bv. 3.500.000,00 euro"},
+            {key:"extra", label:"Bijkomende economische/financiële criteria (optioneel)", type:"table", addLabel:"+ Criterium toevoegen", columns:[
+              {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. DOORSELECTIE: BEPERKING VAN HET AANTAL KANDIDATEN VOLGENS ARTIKEL 79 WET OVERHEIDSOPDRACHTEN"},
+              {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Enkel de 3 kandidaten met de gemiddeld hoogste omzet zullen geselecteerd worden."},
+            ]},
+          ]},
       ]},
       {name:"Selectiecriteria — Technische en beroepsbekwaamheid", fields:[
-        {key:"selectie_tech", label:"Technische en beroepsbekwaamheid", type:"table", defaultRows:3, addLabel:"+ Criterium toevoegen", columns:[
-          {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. Teneinde zijn technische bekwaamheid aan te tonen zal de inschrijver aantonen dat hij ervaring heeft met gelijkaardige opdrachten (het leveren van ...)."},
-          {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Gelijkaardige referenties in de loop van de laatste 3 jaar waarvan:\n- minstens 1 met een minimale waarde van ... euro excl. btw;\n\nHiertoe voegt de inschrijver volgende zaken bij de aanvraag tot deelneming:\n- Naam opdrachtgever;\n- Looptijd van de opdracht;\n- Waarde van de opdracht;\n- Plaats van de opdracht;\n- Aard van de opdracht."},
-        ]},
+        {key:"selectie_tech_g", label:"Technische en beroepsbekwaamheid", type:"pgroups",
+          hint:"Met meerdere percelen kies je hierboven of de criteria voor alle percelen gelden of per perceel/groep verschillen.",
+          legacy: d => ({mode:"alle", groups:[{percelen:[], v:{rows:d.selectie_tech||[]}}]}),
+          sub:[
+            {key:"rows", label:"Selectiecriteria", type:"table", defaultRows:3, addLabel:"+ Criterium toevoegen", columns:[
+              {key:"criterium", label:"Selectiecriterium", wide:true, placeholder:"bv. Teneinde zijn technische bekwaamheid aan te tonen zal de inschrijver aantonen dat hij ervaring heeft met gelijkaardige opdrachten (het leveren van ...)."},
+              {key:"minimum", label:"Minimumvereiste", wide:true, placeholder:"bv. Gelijkaardige referenties in de loop van de laatste 3 jaar waarvan:\n- minstens 1 met een minimale waarde van ... euro excl. btw;\n\nHiertoe voegt de inschrijver volgende zaken bij de aanvraag tot deelneming:\n- Naam opdrachtgever;\n- Looptijd van de opdracht;\n- Waarde van de opdracht;\n- Plaats van de opdracht;\n- Aard van de opdracht."},
+            ]},
+          ]},
       ]},
       {name:"Gunningscriteria (indicatief)", fields:[
         {key:"gunningscriteria_lijst", label:"Gunningscriteria — worden ten indicatieven titel meegegeven", type:"table", defaultRows:4, addLabel:"+ Gunningscriterium toevoegen", columns:[
@@ -1190,15 +1264,57 @@ return {
             <p>Berekend volgens de volgende formule: (141) (&lt; 50% van (10+13))</p>
             <p>De ondernemingen waarvan niet elk van de drie laatste jaarrekeningen aan <u>minstens twee van deze ratio's</u> voldoet, zullen niet geselecteerd worden.</p>`;
 
-      const extraEcoRowsHtml = (d.selectie_eco_extra||[])
-        .filter(r => (r.criterium||"").trim() || (r.minimum||"").trim())
-        .map((r,i) => `<tr><td>${i+3}.</td><td>${nl2br(r.criterium||"")||fill("","Selectiecriterium")}</td><td>${nl2br(r.minimum||"")||fill("","Minimumvereiste")}</td></tr>`)
-        .join("");
+      // Criteria per perceel(groep): per groep een korte zin boven de tabel + een eigen tabel.
+      const ecoView = pgView(d, "selectie_eco_g");
+      const techView = pgView(d, "selectie_tech_g");
+      const pgLabelHtml = (g) => g.label ? `<p class="pg-label">${g.label}</p>` : "";
+      const afwijkingTekst = (d.omzet_afwijking||"").trim();   // enkel nog voor oudere, bewaarde documenten
 
-      const techRows = d.selectie_tech || [];
-      const techRowsHtml = techRows.length
-        ? techRows.map((r,i) => `<tr><td>${i+1}</td><td>${nl2br(r.criterium||"")||fill("","Selectiecriterium")}</td><td>${nl2br(r.minimum||"")||fill("","Minimumvereiste")}</td></tr>`).join("")
-        : `<tr><td colspan="3">${fill("","Nog geen technische selectiecriteria toegevoegd.")}</td></tr>`;
+      const ecoTablesHtml = ecoView.groups.map((g, gi) => {
+        const extra = (g.v.extra||[])
+          .filter(r => (r.criterium||"").trim() || (r.minimum||"").trim())
+          .map((r,i) => `<tr><td>${i+3}.</td><td>${nl2br(r.criterium||"")||fill("","Selectiecriterium")}</td><td>${nl2br(r.minimum||"")||fill("","Minimumvereiste")}</td></tr>`)
+          .join("");
+        return `${pgLabelHtml(g)}
+          <table class="doc-table">
+          <tbody>
+          <tr>
+          <td>Nr.</td>
+          <td>Selectiecriteria</td>
+          <td>Minimumvereisten</td>
+          </tr>
+          <tr>
+          <td>1.</td>
+          <td>Een verklaring betreffende de totale omzet van de onderneming, over <u>de laatste 3 gepubliceerde</u> boekjaren.</td>
+          <td><p>De omzet in de producten, die het voorwerp van deze opdracht uitmaken, bedraagt in <u>elk</u> van deze boekjaren minstens ${fill(g.v.omzet_minimum, "bedrag, bv. 3.500.000,00 euro")} per jaar.</p>${(gi === 0 && afwijkingTekst) ? `<p>${nl2br(d.omzet_afwijking)}</p>` : ""}</td>
+          </tr>
+          <tr>
+          <td>2.</td>
+          <td>Financiële gezondheid.</td>
+          <td>${ratioBlokHtml}</td>
+          </tr>
+          ${extra}
+          </tbody>
+          </table>`;
+      }).join("") + pgUnassignedHtml(ecoView);
+
+      const techTablesHtml = techView.groups.map(g => {
+        const rows = g.v.rows || [];
+        const rowsHtml = rows.length
+          ? rows.map((r,i) => `<tr><td>${i+1}</td><td>${nl2br(r.criterium||"")||fill("","Selectiecriterium")}</td><td>${nl2br(r.minimum||"")||fill("","Minimumvereiste")}</td></tr>`).join("")
+          : `<tr><td colspan="3">${fill("","Nog geen technische selectiecriteria toegevoegd.")}</td></tr>`;
+        return `${pgLabelHtml(g)}
+          <table class="doc-table">
+          <tbody>
+          <tr>
+          <td>Nr.</td>
+          <td>Selectiecriteria</td>
+          <td>Minimumvereisten</td>
+          </tr>
+          ${rowsHtml}
+          </tbody>
+          </table>`;
+      }).join("") + pgUnassignedHtml(techView);
 
       const gcRows = d.gunningscriteria_lijst || [];
       const gcRowsHtml = gcRows.length
@@ -1329,41 +1445,11 @@ return {
           <p>Om in aanmerking te komen voor selectie, dient de kandidaat, per perceel, te voldoen aan de hierna bepaalde minimale vereisten op het vlak van technische, financiële en beroepsbekwaamheid.</p>
           <p>Hij voegt de bewijsstukken voor deze criteria toe per perceel waarvoor hij een aanvraag tot deelneming indient.</p>
           <p><strong><u>Economische en financiële draagkracht van de kandidaat (selectiecriteria)</u></strong></p>
-          <p>Het UEA, waarmee de ondernemer verklaart dat hij voldoet aan de onderstaande selectiecriteria${aantalPercelen > 1 ? ` voor de percelen 1 tot en met ${aantalPercelen} <strong>tenzij waar anders vermeld</strong>` : ""}:</p>
-          <table class="doc-table">
-
-          <tbody>
-          <tr>
-          <td>Nr.</td>
-          <td>Selectiecriteria</td>
-          <td>Minimumvereisten</td>
-          </tr>
-          <tr>
-          <td>1.</td>
-          <td>Een verklaring betreffende de totale omzet van de onderneming, over <u>de laatste 3 gepubliceerde</u> boekjaren.</td>
-          <td><p>De omzet in de producten, die het voorwerp van deze opdracht uitmaken, bedraagt in <u>elk</u> van deze boekjaren minstens ${fill(d.omzet_minimum, "bedrag, bv. 3.500.000,00 euro")} per jaar.</p>${(d.omzet_afwijking||"").trim() ? `<p>${nl2br(d.omzet_afwijking)}</p>` : ""}</td>
-          </tr>
-          <tr>
-          <td>2.</td>
-          <td>Financiële gezondheid.</td>
-          <td>${ratioBlokHtml}</td>
-          </tr>
-          ${extraEcoRowsHtml}
-          </tbody>
-          </table>
+          <p>Het UEA, waarmee de ondernemer verklaart dat hij voldoet aan de onderstaande selectiecriteria${(aantalPercelen > 1 && afwijkingTekst) ? ` voor de percelen 1 tot en met ${aantalPercelen} <strong>tenzij waar anders vermeld</strong>` : ""}:</p>
+          ${ecoTablesHtml}
           <p class="verslag-sub">Technische en beroepsbekwaamheid van de kandidaat (selectiecriteria)</p>
           <p>Het UEA, waarmee de ondernemer verklaart dat hij voldoet aan de onderstaande selectiecriteria:</p>
-          <table class="doc-table">
-
-          <tbody>
-          <tr>
-          <td>Nr.</td>
-          <td>Selectiecriteria</td>
-          <td>Minimumvereisten</td>
-          </tr>
-          ${techRowsHtml}
-          </tbody>
-          </table>
+          ${techTablesHtml}
           <p class="verslag-h">Onderaannemers – beroep op de draagkracht</p>
           <p>De kandidaat kan zich beroepen op de draagkracht van onderaannemers of andere entiteiten.</p>
           <p>In dat geval voegt de kandidaat de nodige documenten toe aan zijn aanvraag tot deelneming, waaruit de verbintenis van deze onderaannemers of van andere entiteiten blijkt om de voor de opdracht noodzakelijke middelen ter beschikking te stellen van de kandidaat.</p>
@@ -3776,8 +3862,10 @@ const NEVER_PERSIST_KEYS = new Set([            // tabelvelden -> altijd []
 const NEVER_PERSIST_TEXT_KEYS = new Set([        // tekstvelden -> altijd ""
   "omzet_minimum", "omzet_afwijking",               // selectieleidraad
 ]);
+const NEVER_PERSIST_PG_KEYS = new Set(["selectie_eco_g", "selectie_tech_g"]);   // criteria per perceelgroep
 function stripNeverPersist(data){
   const copy = {...data};
+  NEVER_PERSIST_PG_KEYS.forEach(k => { delete copy[k]; });
   // Leeg maken (niet verwijderen!) — het formulier verwacht altijd een array
   // voor tabelvelden, dus een ontbrekende sleutel zou een fout veroorzaken.
   // Altijd expliciet op [] zetten, ook als de sleutel nog niet bestond.
@@ -4041,9 +4129,7 @@ function initPage(docId){
   // State init
   ENGINE_STATE.data = {};
   doc.sections.forEach(sec => sec.fields.forEach(f => {
-    ENGINE_STATE.data[f.key] = f.type === "table"
-      ? (f.defaultRows ? Array.from({length:f.defaultRows}, () => Object.fromEntries(f.columns.map(c=>[c.key,""]))) : [])
-      : (f.default || "");
+    ENGINE_STATE.data[f.key] = emptyFieldValue(f);
   }));
   ENGINE_STATE.zoom = 0.9;
   ENGINE_STATE.estimatedPages = 1;
@@ -4070,8 +4156,10 @@ function initPage(docId){
       // (defaultRows), zodat het formulier er hetzelfde uitziet als bij een nieuw document.
       doc.sections.forEach(sec => sec.fields.forEach(f => {
         if(f.type === "table" && f.defaultRows && NEVER_PERSIST_KEYS.has(f.key) && !(ENGINE_STATE.data[f.key]||[]).length){
-          ENGINE_STATE.data[f.key] = Array.from({length:f.defaultRows}, () => Object.fromEntries(f.columns.map(c=>[c.key,""])));
+          ENGINE_STATE.data[f.key] = emptyFieldValue(f);
         }
+        // Criteria per perceelgroep worden nooit bewaard: altijd blanco beginnen.
+        if(f.type === "pgroups") ENGINE_STATE.data[f.key] = emptyFieldValue(f);
       }));
       banner.hidden = true;
       renderForm(); renderPreview(); updateCompleteness(); updateWarnings();
@@ -4107,11 +4195,15 @@ function initPage(docId){
         // aan dit documenttype — in plaats van stil te crashen.
         const emptyBase = {};
         doc.sections.forEach(sec => sec.fields.forEach(f => {
-          emptyBase[f.key] = f.type === "table"
-            ? (f.defaultRows ? Array.from({length:f.defaultRows}, () => Object.fromEntries(f.columns.map(c=>[c.key,""]))) : [])
-            : (f.default || "");
+          emptyBase[f.key] = emptyFieldValue(f);
         }));
         ENGINE_STATE.data = {...emptyBase, ...data.form_data};
+        // Oudere bewaarde documenten (vóór "criteria per perceelgroep"): oude velden omzetten.
+        doc.sections.forEach(sec => sec.fields.forEach(f => {
+          if(f.type === "pgroups" && f.legacy && !(data.form_data[f.key] && data.form_data[f.key].groups)){
+            ENGINE_STATE.data[f.key] = f.legacy(data.form_data);
+          }
+        }));
         renderForm(); renderPreview(); updateCompleteness(); updateWarnings();
         const openBanner = document.getElementById("open-history-banner");
         if(openBanner){
@@ -4147,6 +4239,7 @@ function renderForm(){
   const doc = ENGINE_STATE.docs[ENGINE_STATE.docId];
   const wrap = document.getElementById("form-fields");
   wrap.innerHTML = "";
+  PG_REFRESH = [];
 
   doc.sections.forEach((sec, si) => {
     const secEl = document.createElement("div");
@@ -4158,6 +4251,23 @@ function renderForm(){
     sec.fields.forEach(f => {
       const row = document.createElement("div");
       row.className = "field";
+
+      if(f.type === "pgroups"){
+        row.innerHTML = `<label>${esc(f.label)}</label>`;
+        const box = document.createElement("div");
+        box.className = "pg-box";
+        row.appendChild(box);
+        if(f.hint){
+          const hintEl = document.createElement("div");
+          hintEl.className = "field-hint"; hintEl.textContent = f.hint;
+          row.appendChild(hintEl);
+        }
+        inner.appendChild(row);
+        const redraw = () => renderPGroups(f, box);
+        PG_REFRESH.push(redraw);
+        redraw();
+        return;
+      }
 
       if(f.type === "table"){
         row.innerHTML = `<label>${esc(f.label)}</label>`;
@@ -4172,6 +4282,7 @@ function renderForm(){
           f.columns.forEach(c => empty[c.key] = "");
           ENGINE_STATE.data[f.key].push(empty);
           renderTableRows(f.key, tf, f.columns);
+          if(f.key === "percelen") refreshPGroups();
           renderPreview(); updateCompleteness();
           saveDraft(ENGINE_STATE.docId, ENGINE_STATE.data);
         });
@@ -4215,7 +4326,15 @@ function renderForm(){
 }
 
 function renderTableRows(key, tf, columns){
-  const rows = ENGINE_STATE.data[key];
+  renderRowsInto(ENGINE_STATE.data[key], tf, columns, () => {
+    if(key === "percelen") refreshPGroups();
+    renderPreview(); updateCompleteness(); saveDraft(ENGINE_STATE.docId, ENGINE_STATE.data);
+  }, { onType: key === "percelen" ? refreshPGroups : null });
+}
+
+/* Algemene rij-editor: werkt op eender welke rij-array (ook die in een perceelgroep). */
+function renderRowsInto(rows, tf, columns, onChange, opts){
+  opts = opts || {};
   tf.innerHTML = "";
   if(!rows.length){ tf.innerHTML = `<div class="empty-msg">Nog geen rijen. Klik hieronder om er één toe te voegen.</div>`; return; }
   rows.forEach((r, idx) => {
@@ -4226,7 +4345,7 @@ function renderTableRows(key, tf, columns){
     head.innerHTML = `<span>Rij ${idx+1}</span>`;
     const del = document.createElement("button");
     del.className = "row-del"; del.type = "button"; del.textContent = "✕";
-    del.addEventListener("click", () => { rows.splice(idx,1); renderTableRows(key, tf, columns); renderPreview(); updateCompleteness(); saveDraft(ENGINE_STATE.docId, ENGINE_STATE.data); });
+    del.addEventListener("click", () => { rows.splice(idx,1); renderRowsInto(rows, tf, columns, onChange, opts); onChange(); });
     head.appendChild(del);
     card.appendChild(head);
     const grid = document.createElement("div");
@@ -4239,13 +4358,180 @@ function renderTableRows(key, tf, columns){
       const t = document.createElement("textarea");
       t.placeholder = col.placeholder || col.label; t.value = r[col.key] || "";
       t.rows = col.wide ? 3 : 1;
-      t.addEventListener("input", () => { r[col.key] = t.value; renderPreview(); saveDraft(ENGINE_STATE.docId, ENGINE_STATE.data); });
+      t.addEventListener("input", () => {
+        r[col.key] = t.value; renderPreview(); saveDraft(ENGINE_STATE.docId, ENGINE_STATE.data);
+        if(opts.onType) opts.onType();
+      });
       fwrap.appendChild(lab); fwrap.appendChild(t);
       grid.appendChild(fwrap);
     });
     card.appendChild(grid);
     tf.appendChild(card);
   });
+}
+
+/* ---------------------------------------------------------------------
+   Veldtype "pgroups": criteria die voor alle percelen gelden of per
+   perceel/groep van percelen verschillen.
+   --------------------------------------------------------------------- */
+let PG_REFRESH = [];
+function refreshPGroups(){ PG_REFRESH.forEach(fn => fn()); }
+
+function pgChanged(){ renderPreview(); updateCompleteness(); saveDraft(ENGINE_STATE.docId, ENGINE_STATE.data); }
+
+function renderPGSub(f, v, mount){
+  f.sub.forEach(sf => {
+    const w = document.createElement("div");
+    w.className = "pg-sub";
+    const lab = document.createElement("label");
+    lab.textContent = sf.label;
+    w.appendChild(lab);
+    if(sf.type === "table"){
+      if(!Array.isArray(v[sf.key])) v[sf.key] = [];
+      const tf = document.createElement("div");
+      tf.className = "table-fields";
+      w.appendChild(tf);
+      renderRowsInto(v[sf.key], tf, sf.columns, pgChanged);
+      const addBtn = document.createElement("button");
+      addBtn.className = "row-add"; addBtn.type = "button";
+      addBtn.textContent = sf.addLabel || "+ Rij toevoegen";
+      addBtn.addEventListener("click", () => {
+        v[sf.key].push(emptyRowFor(sf.columns));
+        renderRowsInto(v[sf.key], tf, sf.columns, pgChanged);
+        pgChanged();
+      });
+      w.appendChild(addBtn);
+    } else {
+      const input = document.createElement(sf.type === "textarea" ? "textarea" : "input");
+      if(input.tagName === "INPUT") input.type = "text";
+      if(sf.placeholder) input.placeholder = sf.placeholder;
+      input.value = v[sf.key] || "";
+      input.addEventListener("input", () => { v[sf.key] = input.value; pgChanged(); });
+      w.appendChild(input);
+    }
+    mount.appendChild(w);
+  });
+}
+
+function renderPGroups(f, box){
+  const d = ENGINE_STATE.data;
+  if(!d[f.key] || !Array.isArray(d[f.key].groups) || !d[f.key].groups.length) d[f.key] = emptyFieldValue(f);
+  const pg = d[f.key];
+  const n = pgPercelenCount(d);
+  const percelen = (d.percelen || []).filter(p => (p.naam||"").trim());
+  box.innerHTML = "";
+
+  // Percelen die niet (meer) bestaan uit de groepen halen
+  pg.groups.forEach(g => { g.percelen = (g.percelen || []).filter(x => x <= n); });
+
+  if(n < 2){
+    // Zonder (meerdere) percelen valt er niets te kiezen: één set criteria.
+    const card = document.createElement("div");
+    card.className = "pg-card";
+    renderPGSub(f, pg.groups[0].v, card);
+    box.appendChild(card);
+    return;
+  }
+
+  const grouped = pg.mode === "groepen";
+
+  // Keuze: zelfde voor alle percelen, of verschillend
+  const choice = document.createElement("div");
+  choice.className = "pg-choice";
+  choice.innerHTML = `<div class="pg-choice-q">Gelden deze criteria voor alle ${n} percelen?</div>`;
+  const opts = document.createElement("div");
+  opts.className = "pg-choice-opts";
+  [["alle", `Ja — hetzelfde voor alle percelen`], ["groepen", "Nee — verschilt per perceel of groep"]].forEach(([val, text]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pg-opt" + ((val === "groepen") === grouped ? " active" : "");
+    b.textContent = text;
+    b.addEventListener("click", () => {
+      pg.mode = val;
+      if(val === "groepen" && pg.groups.length < 2) pg.groups.push(pgEmptyGroup(f));
+      renderPGroups(f, box); pgChanged();
+    });
+    opts.appendChild(b);
+  });
+  choice.appendChild(opts);
+  box.appendChild(choice);
+
+  if(!grouped){
+    const card = document.createElement("div");
+    card.className = "pg-card";
+    const head = document.createElement("div");
+    head.className = "pg-card-head";
+    head.textContent = `Voor alle percelen (1 tot en met ${n})`;
+    card.appendChild(head);
+    renderPGSub(f, pg.groups[0].v, card);
+    box.appendChild(card);
+    return;
+  }
+
+  // Wie zit in welke groep?
+  const owner = {};
+  pg.groups.forEach((g, gi) => g.percelen.forEach(x => { if(!(x in owner)) owner[x] = gi; }));
+
+  pg.groups.forEach((g, gi) => {
+    const card = document.createElement("div");
+    card.className = "pg-card";
+    const head = document.createElement("div");
+    head.className = "pg-card-head";
+    const title = document.createElement("span");
+    title.textContent = `Groep ${gi+1}` + (g.percelen.length ? ` — ${g.percelen.length === 1 ? "perceel" : "percelen"} ${pgNumbersText(g.percelen)}` : "");
+    head.appendChild(title);
+    if(pg.groups.length > 2){
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "row-del"; del.textContent = "✕"; del.title = "Groep verwijderen";
+      del.addEventListener("click", () => { pg.groups.splice(gi, 1); renderPGroups(f, box); pgChanged(); });
+      head.appendChild(del);
+    }
+    card.appendChild(head);
+
+    const pick = document.createElement("div");
+    pick.className = "pg-pick";
+    const pl = document.createElement("div");
+    pl.className = "pg-pick-label"; pl.textContent = "Welke percelen horen in deze groep?";
+    pick.appendChild(pl);
+    const chips = document.createElement("div");
+    chips.className = "pg-chips";
+    percelen.forEach((p, pi) => {
+      const nr = pi + 1;
+      const takenBy = (nr in owner && owner[nr] !== gi) ? owner[nr] : null;
+      const chip = document.createElement("label");
+      chip.className = "pg-chip" + (g.percelen.includes(nr) ? " on" : "") + (takenBy !== null ? " taken" : "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = g.percelen.includes(nr); cb.disabled = takenBy !== null;
+      cb.addEventListener("change", () => {
+        g.percelen = cb.checked ? [...g.percelen, nr].sort((a,b) => a-b) : g.percelen.filter(x => x !== nr);
+        renderPGroups(f, box); pgChanged();
+      });
+      const nm = (p.naam || "").trim();
+      chip.title = takenBy !== null ? `Zit al in groep ${takenBy+1}` : nm;
+      chip.appendChild(cb);
+      chip.appendChild(document.createTextNode(` Perceel ${nr}` + (takenBy !== null ? ` (groep ${takenBy+1})` : (nm ? ` — ${nm.length > 28 ? nm.slice(0,27) + "…" : nm}` : ""))));
+      chips.appendChild(chip);
+    });
+    pick.appendChild(chips);
+    card.appendChild(pick);
+
+    renderPGSub(f, g.v, card);
+    box.appendChild(card);
+  });
+
+  const add = document.createElement("button");
+  add.type = "button"; add.className = "row-add"; add.textContent = "+ Groep toevoegen";
+  add.addEventListener("click", () => { pg.groups.push(pgEmptyGroup(f)); renderPGroups(f, box); pgChanged(); });
+  box.appendChild(add);
+
+  const free = [];
+  for(let i = 1; i <= n; i++) if(!(i in owner)) free.push(i);
+  if(free.length){
+    const warn = document.createElement("div");
+    warn.className = "pg-warn";
+    warn.textContent = `⚠ ${free.length === 1 ? "Perceel" : "Percelen"} ${pgNumbersText(free)} ${free.length === 1 ? "zit" : "zitten"} nog in geen enkele groep — dit staat zo ook in het document aangeduid.`;
+    box.appendChild(warn);
+  }
 }
 
 /* Knipt de koptekst (logo + groene lijn + referentie) en de voettekst
@@ -4374,7 +4660,7 @@ function updateCompleteness(){
   const doc = ENGINE_STATE.docs[ENGINE_STATE.docId];
   let total = 0, filled = 0;
   doc.sections.forEach(sec => sec.fields.forEach(f => {
-    if(f.type === "table") return;
+    if(f.type === "table" || f.type === "pgroups") return;
     total++;
     if((ENGINE_STATE.data[f.key]||"").toString().trim()) filled++;
   }));
