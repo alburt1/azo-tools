@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZO — Doorgeefluik</title>
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="stylesheet" href="../shared/style.css">
+<style>
+  .dg-shell{ max-width:1000px; margin:0 auto; padding:26px 28px 100px; }
+  .dg-tabs{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 34px; }
+  .dg-tab{
+    border:1.5px solid var(--azo-green-tint-2); background:#fff; color:var(--azo-green-deep);
+    border-radius:26px; padding:11px 20px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:var(--sans);
+    transition:background .15s, border-color .15s;
+  }
+  .dg-tab:hover{ background:var(--azo-green-tint); }
+  .dg-tab.active{ background:var(--azo-green-dark); border-color:var(--azo-green-dark); color:#fff; }
+  .dg-tab small{ font-weight:600; opacity:.8; margin-left:4px; }
+
+  .dg-step{ margin-bottom:40px; }
+  .dg-step[hidden]{ display:none; }
+  .dg-step-label{ display:flex; align-items:baseline; gap:10px; margin-bottom:6px; }
+  .dg-step-num{
+    width:24px;height:24px;border-radius:50%;background:var(--azo-green-tint);color:var(--azo-green-dark);
+    display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;
+  }
+  .dg-step-title{ font-size:16px; font-weight:800; color:var(--ink); }
+  .dg-step-sub{ font-size:12.5px; color:var(--ink-soft); margin:0 0 16px 34px; line-height:1.55; max-width:680px; }
+
+  .dg-drop{
+    display:block; background:var(--panel); border:1.5px dashed var(--line); border-radius:var(--radius);
+    padding:26px; cursor:pointer; box-shadow:var(--shadow-card); max-width:620px; transition:border-color .14s, background .14s;
+    margin-left:34px;
+  }
+  .dg-drop:hover, .dg-drop.over{ border-color:var(--azo-green); }
+  .dg-drop.filled{ border-style:solid; border-color:var(--azo-green); background:var(--azo-green-tint); }
+  .dg-drop h3{ margin:0 0 5px; font-size:14px; font-weight:700; }
+  .dg-drop p{ margin:0; font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .dg-drop input{ display:none; }
+  .dg-status{ margin:10px 0 0 34px; font-size:12.5px; font-weight:700; }
+  .dg-status.ok{ color:var(--azo-green-dark); }
+  .dg-status.err{ color:#a33a2a; }
+
+  .dg-panel{ margin-left:34px; background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-card); padding:6px 22px 22px; }
+  .dg-group-title{ font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-faint); margin:20px 0 10px; display:flex; align-items:center; gap:10px; }
+  .dg-group-title::after{ content:""; flex:1; height:1px; background:var(--line); }
+  .dg-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; }
+  @media (max-width:760px){ .dg-grid{ grid-template-columns:1fr; } }
+  .dg-field label{ display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; margin-bottom:4px; color:var(--ink); }
+  .dg-field.wide{ grid-column:1 / -1; }
+  .dg-field input, .dg-field textarea, .dg-row input, .dg-crit-head input{
+    width:100%; box-sizing:border-box; font-family:var(--sans); font-size:13px; padding:8px 10px;
+    border:1.5px solid var(--line); border-radius:9px; background:#fff; color:var(--ink);
+  }
+  .dg-field textarea{ min-height:64px; resize:vertical; }
+  .dg-field.missing input, .dg-field.missing textarea{ border-color:#e8c46b; background:#fffaf0; }
+  .dg-flag{ font-size:10.5px; font-weight:800; padding:1px 7px; border-radius:9px; }
+  .dg-flag.ok{ background:var(--azo-green-tint); color:var(--azo-green-dark); }
+  .dg-flag.no{ background:#fff3d6; color:#8a6400; }
+
+  .dg-rows{ display:flex; flex-direction:column; gap:8px; }
+  .dg-row{ display:grid; gap:8px; align-items:center; }
+  .dg-row.perceel{ grid-template-columns:44px 1fr 200px 32px; }
+  .dg-row.crit{ grid-template-columns:70px 1fr 90px 32px; }
+  .dg-rownum{ font-size:12px; font-weight:800; color:var(--azo-green-dark); }
+  .dg-x{ border:1px solid #e4c9c3; background:#fff; color:#a33a2a; border-radius:8px; width:30px; height:30px; cursor:pointer; font-weight:800; }
+  .dg-add{ border:1.5px dashed var(--azo-green-tint-2); background:var(--azo-green-tint); color:var(--azo-green-deep); border-radius:10px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; margin-top:10px; font-family:var(--sans); }
+  .dg-add:hover{ background:#dfeccf; }
+  .dg-crit-group{ border:1px solid var(--azo-green-tint-2); border-left:4px solid var(--azo-green); border-radius:10px; padding:12px 14px; margin-bottom:12px; background:#fcfdfa; }
+  .dg-crit-head{ display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+  .dg-crit-head input{ flex:1; font-weight:700; }
+  .dg-hint{ font-size:11.5px; color:var(--ink-faint); margin-top:6px; }
+
+  .dg-targets{ margin-left:34px; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .dg-targets{ grid-template-columns:1fr; } }
+  .dg-target{
+    text-align:left; font-family:var(--sans); background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:16px 18px; cursor:pointer;
+    box-shadow:var(--shadow-card); transition:border-color .14s, transform .14s, background .14s;
+  }
+  .dg-target:hover{ border-color:var(--azo-green); transform:translateY(-2px); }
+  .dg-target.active{ border-color:var(--azo-green-dark); background:var(--azo-green-tint); box-shadow:0 0 0 2px var(--azo-green-tint-2); }
+  .dg-target b{ display:block; font-size:14px; color:var(--azo-green-deep); margin-bottom:5px; }
+  .dg-target span{ font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+
+  .dg-sum{ margin-left:34px; background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-card); overflow:hidden; }
+  .dg-sum table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .dg-sum td{ padding:9px 14px; border-top:1px solid var(--line-soft, #eef1e8); vertical-align:top; }
+  .dg-sum tr:first-child td{ border-top:none; }
+  .dg-sum td:first-child{ width:34%; font-weight:700; color:var(--ink); }
+  .dg-sum td.v{ white-space:pre-line; color:var(--ink-soft); }
+  .dg-sum td.v.empty{ color:#8a6400; font-style:italic; }
+  .dg-todo{ margin:14px 0 0 34px; padding:12px 16px; background:#fff6dd; border:1px solid #f0d98a; border-radius:12px; font-size:12.5px; color:#6b5200; line-height:1.55; max-width:680px; }
+  .dg-todo ul{ margin:6px 0 0 18px; padding:0; }
+  .dg-go{
+    margin:22px 0 0 34px; display:inline-flex; align-items:center; gap:9px; background:var(--azo-green-dark); color:#fff; border:none;
+    border-radius:28px; padding:14px 26px; font-size:14.5px; font-weight:800; cursor:pointer; font-family:var(--sans);
+    box-shadow:0 10px 22px -10px rgba(40,70,15,.6); transition:transform .15s, gap .15s;
+  }
+  .dg-go:hover{ transform:translateY(-2px); gap:13px; }
+  .dg-go[disabled]{ opacity:.45; cursor:not-allowed; transform:none; }
+</style>
+<style>body{visibility:hidden;}</style>
+<script>window.__AZO_PAGE_DEPTH__ = 1;</script>
+<script src="../shared/lib/supabase.js"></script>
+<script src="../shared/auth.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script src="doorgeefluik.js"></script>
+</head>
+<body>
+<script>
+(async () => {
+  const session = await requireAuth();
+  if (session) {
+    wireAuthUI(session);
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
+
+<div class="topnav">
+  <div class="topnav-inner">
+    <a class="brand" href="https://www.samenaankoopazo.be/" target="_blank" rel="noopener">
+      <img src="../assets/azo_topnav.png" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
+    </a>
+    <nav class="topnav-center">
+      <a class="topnav-home" href="../Documentgenerator/index.html">Documentgenerator</a>
+      <a class="topnav-home" href="../Ledenlijst-samenvoeger/index.html">Ledenlijst Samenvoeger</a>
+      <a class="topnav-home active" href="index.html">Doorgeefluik</a>
+    </nav>
+    <div style="display:flex;align-items:center;gap:12px;justify-self:end;">
+      <span data-user-email style="font-size:11.5px;color:var(--ink-faint);"></span>
+      <a href="#" data-signout-btn class="topnav-signout">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 4.5H8.5A1.5 1.5 0 0 0 7 6v12a1.5 1.5 0 0 0 1.5 1.5H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M20 12H10.5M20 12l-3-3M20 12l-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Uitloggen
+      </a>
+      <a class="topnav-cta-home" href="../index.html">⌂&nbsp; Home</a>
+    </div>
+  </div>
+</div>
+
+<div class="hub-hero">
+  <img class="logo-big" src="../assets/azo_full.png" alt="AZO — Aankoopcentrale voor Zorg en Overheid">
+  <h1>Doorgeefluik</h1>
+  <p>Gegevens die al in een document staan, hoef je niet opnieuw in te typen. Upload de selectieleidraad of het bestek,
+  controleer wat de tool herkent en open het volgende document vooringevuld in de Documentgenerator.</p>
+</div>
+
+<div class="dg-shell">
+  <div class="dg-tabs" id="dg-tabs"></div>
+
+  <div class="dg-step" id="step1">
+    <div class="dg-step-label"><span class="dg-step-num">1</span><span class="dg-step-title" id="s1-title">Upload het document</span></div>
+    <p class="dg-step-sub" id="s1-sub"></p>
+    <label class="dg-drop" id="dg-drop">
+      <h3 id="dg-drop-title">Klik of sleep een Word-bestand (.docx) hierheen</h3>
+      <p>Het bestand wordt enkel in je browser gelezen en nergens opgeslagen of verstuurd.</p>
+      <input type="file" id="dg-file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+    </label>
+    <div class="dg-status" id="dg-status"></div>
+  </div>
+
+  <div class="dg-step" id="step2" hidden>
+    <div class="dg-step-label"><span class="dg-step-num">2</span><span class="dg-step-title">Controleer wat er herkend werd</span></div>
+    <p class="dg-step-sub">Alles is aanpasbaar. Een oranje veld betekent dat de tool dit niet in het document vond — vul het hier aan of laat het leeg om het later in de Documentgenerator in te vullen.</p>
+    <div class="dg-panel" id="dg-panel"></div>
+  </div>
+
+  <div class="dg-step" id="step3" hidden>
+    <div class="dg-step-label"><span class="dg-step-num">3</span><span class="dg-step-title">Welk document wil je maken?</span></div>
+    <p class="dg-step-sub" id="s3-sub"></p>
+    <div class="dg-targets" id="dg-targets"></div>
+  </div>
+
+  <div class="dg-step" id="step4" hidden>
+    <div class="dg-step-label"><span class="dg-step-num">4</span><span class="dg-step-title">Dit wordt overgenomen</span></div>
+    <p class="dg-step-sub">Controleer het overzicht en open het document. Daar kan je alles nog aanpassen en aanvullen voor je het downloadt.</p>
+    <div class="dg-sum" id="dg-sum"></div>
+    <div class="dg-todo" id="dg-todo"></div>
+    <button type="button" class="dg-go" id="dg-go">Openen in de Documentgenerator <span>→</span></button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const STORAGE_PREFIX = "azo_docgen_";            // zelfde voorvoegsel als de Documentgenerator
+  const state = { chain: "sl2bestek", parsed: null, fileName: "", target: null };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  const FIELD_LABELS = {
+    sl2bestek: [
+      ["Voorblad", [["type", "Type opdracht"], ["titel", "Voorwerp (voorblad)"], ["referte", "Referte"], ["procedure", "Plaatsingsprocedure"], ["contact_naam", "Contactpersoon"], ["contact_email", "E-mail contactpersoon"]]],
+      ["Beschrijving van de opdracht", [["titel_klein", "Voorwerp in lopende tekst"], ["percelen_inleiding", "Inleidende zin boven de percelen", "wide"], ["looptijd", "Looptijd"], ["verlengingen", "Aantal verlengingen"], ["verlengperiode", "Duur van elke verlenging"], ["leveringsplaats", "Leveringsplaats"], ["bestelhoeveelheid", "Maximale bestelhoeveelheid (zonder percelen)"], ["bijdrage", "Administratieve bijdrage (%)"], ["doel", "Doel van de opdracht", "wide", "area"]]],
+    ],
+    bestek2verslag: [
+      ["Voorblad", [["type", "Type opdracht"], ["titel", "Voorwerp (voorblad)"], ["referte", "Referte"], ["procedure", "Plaatsingsprocedure"], ["contact_naam", "Contactpersoon"], ["contact_email", "E-mail contactpersoon"]]],
+      ["Beschrijving van de opdracht", [["voorwerp_zin", "Voorwerp (zin in het bestek)", "wide"], ["bestelhoeveelheid", "Maximale bestelhoeveelheid (zonder percelen)"]]],
+    ],
+  };
+
+  /* ---------- tabs ---------- */
+  function renderTabs() {
+    $("dg-tabs").innerHTML = Object.entries(DG.CHAINS).map(([id, c]) =>
+      `<button type="button" class="dg-tab${id === state.chain ? " active" : ""}" data-chain="${id}">${esc(c.title)}</button>`).join("");
+    $("dg-tabs").querySelectorAll(".dg-tab").forEach(b => b.addEventListener("click", () => { state.chain = b.dataset.chain; resetAll(); }));
+    const c = DG.CHAINS[state.chain];
+    $("s1-title").textContent = state.chain === "sl2bestek" ? "Upload de selectieleidraad" : "Upload het bestek";
+    $("s1-sub").textContent = c.intro;
+    $("s3-sub").textContent = state.chain === "sl2bestek" ? "Kies het soort bestek dat je op basis van deze selectieleidraad opmaakt." : "Kies het soort gunningsverslag dat je op basis van dit bestek opmaakt.";
+  }
+  function resetAll() {
+    state.parsed = null; state.target = null; state.fileName = "";
+    $("dg-file").value = ""; $("dg-drop").classList.remove("filled");
+    $("dg-drop-title").textContent = "Klik of sleep een Word-bestand (.docx) hierheen";
+    $("dg-status").textContent = ""; $("dg-status").className = "dg-status";
+    ["step2", "step3", "step4"].forEach(id => $(id).hidden = true);
+    renderTabs();
+  }
+
+  /* ---------- upload ---------- */
+  async function handleFile(file) {
+    if (!file) return;
+    const st = $("dg-status");
+    st.className = "dg-status"; st.textContent = "Bezig met lezen…";
+    try {
+      const blocks = await DG.readDocx(await file.arrayBuffer());
+      const parsed = DG.CHAINS[state.chain].parse(blocks);
+      state.parsed = parsed; state.fileName = file.name; state.target = null;
+      $("dg-drop").classList.add("filled");
+      $("dg-drop-title").textContent = file.name;
+      const found = Object.values(parsed.fields).filter(Boolean).length + parsed.percelen.length + parsed.criteria.length;
+      if (!found) throw new Error("Er werd niets herkend. Is dit wel " + (state.chain === "sl2bestek" ? "een selectieleidraad" : "een bestek") + " in de AZO-opmaak?");
+      st.className = "dg-status ok";
+      st.textContent = `✓ Gelezen — ${Object.values(parsed.fields).filter(Boolean).length} velden, ${parsed.percelen.length} percelen, ${parsed.criteria.reduce((n, g) => n + g.rows.length, 0)} gunningscriteria herkend.`;
+      renderPanel(); $("step2").hidden = false; renderTargets(); $("step3").hidden = false; $("step4").hidden = true;
+    } catch (e) {
+      st.className = "dg-status err"; st.textContent = "✕ " + (e.message || "Het bestand kon niet gelezen worden.");
+      ["step2", "step3", "step4"].forEach(id => $(id).hidden = true);
+    }
+  }
+
+  /* ---------- controle-paneel ---------- */
+  function renderPanel() {
+    const P = state.parsed, groups = FIELD_LABELS[state.chain];
+    let html = "";
+    groups.forEach(([title, fields]) => {
+      html += `<div class="dg-group-title">${esc(title)}</div><div class="dg-grid">`;
+      fields.forEach(([key, label, wide, area]) => {
+        const v = P.fields[key] || "";
+        html += `<div class="dg-field${wide ? " wide" : ""}${v ? "" : " missing"}" data-key="${key}">
+          <label>${esc(label)} <span class="dg-flag ${v ? "ok" : "no"}">${v ? "herkend" : "niet gevonden"}</span></label>
+          ${area ? `<textarea data-field="${key}">${esc(v)}</textarea>` : `<input type="text" data-field="${key}" value="${esc(v)}">`}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `<div class="dg-group-title">Percelen</div><div class="dg-rows" id="dg-percelen"></div><button type="button" class="dg-add" id="dg-add-perceel">+ Perceel toevoegen</button>
+      <div class="dg-hint">Laat leeg als de opdracht niet in percelen is opgedeeld.</div>
+      <div class="dg-group-title">Gunningscriteria</div><div id="dg-crit"></div><button type="button" class="dg-add" id="dg-add-group">+ Groep van percelen toevoegen</button>
+      <div class="dg-hint">Een groep met als titel “Voor beide percelen” of “Voor alle percelen” geldt voor alle percelen. Voor verschillende criteria per perceel: “Voor perceel 1”, “Voor de percelen 2 en 3”, …</div>`;
+    $("dg-panel").innerHTML = html;
+    $("dg-panel").querySelectorAll("[data-field]").forEach(inp => inp.addEventListener("input", () => {
+      P.fields[inp.dataset.field] = inp.value;
+      const box = inp.closest(".dg-field"); const has = !!inp.value.trim();
+      box.classList.toggle("missing", !has);
+      const fl = box.querySelector(".dg-flag"); fl.className = "dg-flag " + (has ? "ok" : "no"); fl.textContent = has ? "herkend" : "niet gevonden";
+      refreshSummary();
+    }));
+    $("dg-add-perceel").addEventListener("click", () => { P.percelen.push({ naam: "", max_bedrag: "" }); renderPercelen(); refreshSummary(); });
+    $("dg-add-group").addEventListener("click", () => { P.criteria.push({ label: "", percelen: null, rows: [{ nr: "1", naam: "", gewicht: "", details: "" }], totaal: null }); renderCrit(); refreshSummary(); });
+    renderPercelen(); renderCrit();
+  }
+
+  function renderPercelen() {
+    const P = state.parsed, box = $("dg-percelen");
+    box.innerHTML = P.percelen.map((p, i) => `<div class="dg-row perceel" data-i="${i}">
+        <span class="dg-rownum">${i + 1}.</span>
+        <input type="text" data-k="naam" placeholder="Naam van het perceel" value="${esc(p.naam)}">
+        <input type="text" data-k="max_bedrag" placeholder="Maximaal bedrag, bv. 1.000.000,00 euro" value="${esc(p.max_bedrag)}">
+        <button type="button" class="dg-x" title="Verwijderen">✕</button></div>`).join("") || `<div class="dg-hint">Geen percelen.</div>`;
+    box.querySelectorAll(".dg-row").forEach(row => {
+      const i = +row.dataset.i;
+      row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { P.percelen[i][inp.dataset.k] = inp.value; refreshSummary(); }));
+      row.querySelector(".dg-x").addEventListener("click", () => { P.percelen.splice(i, 1); renderPercelen(); refreshSummary(); });
+    });
+  }
+
+  function renderCrit() {
+    const P = state.parsed, box = $("dg-crit");
+    box.innerHTML = P.criteria.map((g, gi) => `<div class="dg-crit-group" data-g="${gi}">
+        <div class="dg-crit-head"><input type="text" data-gl placeholder="bv. Voor beide percelen" value="${esc(g.label)}"><button type="button" class="dg-x" data-gdel title="Groep verwijderen">✕</button></div>
+        <div class="dg-rows">${g.rows.map((r, ri) => `<div class="dg-row crit" data-r="${ri}">
+            <input type="text" data-k="nr" placeholder="Nr." value="${esc(r.nr)}">
+            <input type="text" data-k="naam" placeholder="Criterium, bv. Prijs" value="${esc(r.naam)}">
+            <input type="text" data-k="gewicht" placeholder="Gewicht" value="${esc(r.gewicht)}">
+            <button type="button" class="dg-x" title="Verwijderen">✕</button></div>`).join("")}</div>
+        <button type="button" class="dg-add" data-radd>+ Criterium toevoegen</button></div>`).join("") || `<div class="dg-hint">Geen gunningscriteria gevonden.</div>`;
+    box.querySelectorAll(".dg-crit-group").forEach(gEl => {
+      const gi = +gEl.dataset.g, g = P.criteria[gi];
+      gEl.querySelector("[data-gl]").addEventListener("input", e => { g.label = e.target.value; g.percelen = g.label ? DG.parsePerceelNummers(g.label) : null; refreshSummary(); });
+      gEl.querySelector("[data-gdel]").addEventListener("click", () => { P.criteria.splice(gi, 1); renderCrit(); refreshSummary(); });
+      gEl.querySelector("[data-radd]").addEventListener("click", () => { g.rows.push({ nr: String(g.rows.filter(r => !/\./.test(r.nr)).length + 1), naam: "", gewicht: "", details: "" }); renderCrit(); refreshSummary(); });
+      gEl.querySelectorAll(".dg-row").forEach(row => {
+        const ri = +row.dataset.r;
+        row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { g.rows[ri][inp.dataset.k] = inp.value; refreshSummary(); }));
+        row.querySelector(".dg-x").addEventListener("click", () => { g.rows.splice(ri, 1); renderCrit(); refreshSummary(); });
+      });
+    });
+  }
+
+  /* ---------- doeldocument ---------- */
+  function renderTargets() {
+    const c = DG.CHAINS[state.chain];
+    $("dg-targets").innerHTML = c.targets.map(t => `<button type="button" class="dg-target${state.target === t.id ? " active" : ""}" data-t="${t.id}"><b>${esc(t.label)}</b><span>${esc(t.desc)}</span></button>`).join("");
+    $("dg-targets").querySelectorAll(".dg-target").forEach(b => b.addEventListener("click", () => {
+      state.target = b.dataset.t; renderTargets(); $("step4").hidden = false; refreshSummary();
+      $("step4").scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
+  }
+
+  function currentResult() {
+    if (!state.target || !state.parsed) return null;
+    const t = DG.CHAINS[state.chain].targets.find(x => x.id === state.target);
+    return { target: t, res: t.map(state.parsed) };
+  }
+
+  function refreshSummary() {
+    const cur = currentResult(); if (!cur) return;
+    const { res } = cur;
+    $("dg-sum").innerHTML = `<table>${res.items.map(it => `<tr><td>${esc(it.label)}</td><td class="v${it.ok ? "" : " empty"}">${it.ok ? esc(it.value) : "niet beschikbaar — in te vullen in de Documentgenerator"}</td></tr>`).join("")}</table>`;
+    $("dg-todo").innerHTML = `<b>Nog zelf aan te vullen in het nieuwe document:</b><ul>${res.todo.map(t => `<li>${esc(t)}</li>`).join("")}</ul>`;
+  }
+
+  $("dg-go").addEventListener("click", () => {
+    const cur = currentResult(); if (!cur) return;
+    const { target, res } = cur;
+    const aantal = res.items.filter(i => i.ok).length;
+    try {
+      localStorage.setItem(STORAGE_PREFIX + "prefill_" + target.id, JSON.stringify({
+        data: res.data, bron: (state.chain === "sl2bestek" ? "de selectieleidraad" : "het bestek") + ` “${state.fileName}”`, aantal, savedAt: Date.now(),
+      }));
+    } catch (e) {
+      alert("De gegevens konden niet doorgegeven worden (opslag in de browser is geblokkeerd).");
+      return;
+    }
+    window.location.href = "../Documentgenerator/" + target.page + "?prefill=1";
+  });
+
+  /* ---------- events ---------- */
+  const drop = $("dg-drop");
+  $("dg-file").addEventListener("change", e => handleFile(e.target.files[0]));
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => handleFile(e.dataTransfer.files[0]));
+
+  renderTabs();
+})();
+</script>
+</body>
+</html>
